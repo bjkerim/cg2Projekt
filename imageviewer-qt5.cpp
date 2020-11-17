@@ -429,7 +429,7 @@ void ImageViewer::histogramColor() {
     for (int z = 0; z<256; z++){
         for (int h=0; h<(endWertGreen[z]); h++){
             if(QRgb(myHistogramColor->pixel(z,h)) == Qt::red){
-             myHistogramColor->setPixelColor(z,h, Qt::yellow);
+                myHistogramColor->setPixelColor(z,h, Qt::yellow);
             }
 
             myHistogramColor->setPixelColor(z,h, Qt::green);
@@ -439,7 +439,7 @@ void ImageViewer::histogramColor() {
     for (int z = 0; z<256; z++){
         for (int h=0; h<(endWertBlue[z]); h++){
             if(QRgb(myHistogramColor->pixel(z,h)) == Qt::red){
-             myHistogramColor->setPixelColor(z,h, Qt::magenta);
+                myHistogramColor->setPixelColor(z,h, Qt::magenta);
             }
 
             else if(QRgb(myHistogramColor->pixel(z,h)) == Qt::green){
@@ -456,17 +456,15 @@ void ImageViewer::histogramColor() {
         }
     }
 
-
-
-
-
-
     QImage mirrorImage  = myHistogramColor->mirrored(false,true);
     myHistogramColorLabel->setPixmap(QPixmap::fromImage(mirrorImage));
     myHistogramColorLabel->show();
 
 
 }
+
+/*******************************************************************/
+
 void ImageViewer::helligkeit(int helligkeitswert) {
 
     *imageCopy = *imageGray;
@@ -497,7 +495,7 @@ void ImageViewer::helligkeit(int helligkeitswert) {
 
 }
 
-
+/*************************************************************************/
 
 void ImageViewer::helligkeitColor(int helligkeitswert) {
 
@@ -550,6 +548,7 @@ void ImageViewer::helligkeitColor(int helligkeitswert) {
 
 }
 
+/***************************************************************************/
 
 void ImageViewer::kontrast(int konstante) {
 
@@ -574,7 +573,9 @@ void ImageViewer::kontrast(int konstante) {
 
             }
         }
-    }    mid = (high+low)/2;
+    }
+
+    mid = (high+low)/2;
 
 
     for (int i=0; i <w; i++){
@@ -589,7 +590,7 @@ void ImageViewer::kontrast(int konstante) {
                 newPixelValue = (((qRed(image->pixel(i,j)) - mid) / std::abs(konstante))) + 0.5;
             }
 
-            else if (konstante = 0) {
+            else if (konstante == 0) {
                 imageLabel->setPixmap(QPixmap::fromImage(*imageGray));
 
             }
@@ -609,11 +610,103 @@ void ImageViewer::kontrast(int konstante) {
         }
     }
 
+
     imageLabel->setPixmap(QPixmap::fromImage(*imageCopy));
 
     /* logFile << "High: " << high << " " << "low: " <<low<< std::endl;*/
     renewLogging();
 }
+/*******************************************************/
+void ImageViewer::kontrastColor(int konstante) {
+
+    *imageCopy = *image;
+
+    int w = imageCopy->width();
+    int h = imageCopy->height();
+    int low = 0;
+    int high = 0;
+    int mid = 0;
+    low = ((qRed(image->pixel(0,0)) *0.299) + (qGreen(image->pixel(0,0))* 0.587) + (qBlue(image->pixel(0,0))*0.114));
+    high = ((qRed(image->pixel(0,0)) *0.299) + (qGreen(image->pixel(0,0))* 0.587) + (qBlue(image->pixel(0,0))*0.114));
+
+    for (int i = 0; i <= w-1; i++){
+        for(int j = 0; j <= h-1; j++ ){
+            QRgb color = image->pixel(i,j);
+            int y = ((qRed(color) *0.299) + (qGreen(color)* 0.587) + (qBlue(color)*0.114));
+            //            int cb = 128+((qRed(color) * -0.169) + (qGreen(color)* -0.331) + (qBlue(color)*0.5));
+            //            int cr = 128+((qRed(color) * 0.5) + (qGreen(color)* -0.419) + (qBlue(color)*-0.081));
+
+            /*_---------------------------*/
+            int aktuellerWert = y;
+            if (aktuellerWert < low){
+                low = aktuellerWert;
+            }
+            if (aktuellerWert > high){
+                high = aktuellerWert;
+
+            }
+
+        }
+    }
+    mid = (high+low)/2;
+
+
+    for (int i=0; i <w; i++){
+        for (int j = 0; j<h; j++){
+
+            QRgb color = image->pixel(i,j);
+            int y = ((qRed(color) *0.299) + (qGreen(color)* 0.587) + (qBlue(color)*0.114));
+            int cb = 128+((qRed(color) * -0.169) + (qGreen(color)* -0.331) + (qBlue(color)*0.5));
+            int cr = 128+((qRed(color) * 0.5) + (qGreen(color)* -0.419) + (qBlue(color)*-0.081));
+
+            int newYValue = 0;
+            if (konstante > 0) {
+                newYValue = ((y - mid) * konstante) + 0.5;
+            }
+
+            else if (konstante < 0) {
+
+                newYValue = ((y - mid) / std::abs(konstante)) + 0.5;
+            }
+
+//            else if (konstante == 0) {
+//                imageLabel->setPixmap(QPixmap::fromImage(*imageCopy));
+
+//            }
+            newYValue = newYValue + mid;
+
+            int newR = ((newYValue-16)*1.164) + ((cr-128)*1.596);
+            int newG = ((newYValue-16)*1.164) + ((cb-128)*(-0.392)) + ((cr-128)*(-0.813));
+            int newB =  ((newYValue-16)*1.164) + ((cb-128)*2.017);
+
+            if(newR > 255) {
+                newR = 255;
+            }
+            else if (newR < 0) {
+                newR = 0;
+            }
+            if(newG > 255) {
+                newG = 255;
+            }
+            else if (newG < 0) {
+                newG = 0;
+            }
+            if(newB > 255) {
+                newB = 255;
+            }
+            else if (newB < 0) {
+                newB = 0;
+            }
+
+            imageCopy->setPixel(i, j, qRgb(newR,newG,newB));
+
+        }
+    }
+    imageLabel->setPixmap(QPixmap::fromImage(*imageCopy));
+
+
+}
+/************************************************************************/
 
 void ImageViewer::autoKontrast(int kontrastWert) {
 
@@ -845,6 +938,14 @@ void ImageViewer::generateControlPanels()
     sliderColorBrightness->setToolTip("Helligkeitsslider für Farben");
     connect(sliderColorBrightness, SIGNAL(valueChanged(int)),this, SLOT(helligkeitColor(int)));
 
+    QSlider *sliderKontrastColor = new QSlider(Qt::Horizontal,0);
+    sliderKontrastColor->setRange(-10,10);
+    sliderKontrastColor->setTickPosition(QSlider::TicksBelow);
+    sliderKontrastColor->setTickInterval(1);
+    sliderKontrastColor->setToolTip("Kontrastslider Farbe");
+    connect(sliderKontrastColor, SIGNAL(valueChanged(int)),this, SLOT(kontrastColor(int)));
+
+
     myHistogramColorLabel = new QLabel(this);
 
 
@@ -856,6 +957,7 @@ void ImageViewer::generateControlPanels()
 
     m_option_layout3->addWidget(sliderColorBit);
     m_option_layout3->addWidget(sliderColorBrightness);
+    m_option_layout3->addWidget(sliderKontrastColor);
     m_option_layout3->addWidget(myHistogramColorLabel);
     m_option_layout3->addWidget(colorHistgoramButton);
 

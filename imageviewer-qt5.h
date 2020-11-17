@@ -95,6 +95,7 @@ class ImageViewer : public QMainWindow
      QSlider* sliderBit;
      QSlider *sliderColorBrightness;
      QSlider* kontrastSlider;
+     QSlider* sliderKontrastColor;
      QSlider* sliderColorBit;
      QSpinBox* spinbox1;
      QLabel* labelMiddleBrightness;
@@ -117,6 +118,7 @@ class ImageViewer : public QMainWindow
      void histogram();
      void helligkeit(int helligkeitswert);
      void kontrast(int konstante);
+     void kontrastColor(int konstante);
      void bitDynamik(int bits);
      void autoKontrast(int kontrastWert);
      void createImageBlackCopy();
