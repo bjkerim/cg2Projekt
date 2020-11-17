@@ -734,7 +734,7 @@ void ImageViewer::autoKontrast(int kontrastWert) {
         sliderColorBrightness->setRange(-255,255);
         sliderColorBrightness->setTickPosition(QSlider::TicksBelow);
         sliderColorBrightness->setTickInterval(10);
-        sliderColorBrightness->setToolTip("Helligkeitsslider");
+        sliderColorBrightness->setToolTip("Helligkeitsslider für Farben");
         connect(sliderColorBrightness, SIGNAL(valueChanged(int)),this, SLOT(helligkeitColor(int)));
 
 
