@@ -726,7 +726,7 @@ void ImageViewer::autoKontrast(int kontrastWert) {
         sliderColorBit->setRange(1,8);
         sliderColorBit->setTickPosition(QSlider::TicksBelow);
         sliderColorBit->setTickInterval(1);
-        sliderColorBit->setToolTip("Autokontrastslider");
+        sliderColorBit->setToolTip("Bit-Dynamik Farbe");
         connect(sliderColorBit, SIGNAL(valueChanged(int)),this, SLOT(bitDynamikColor(int)));
 
 
