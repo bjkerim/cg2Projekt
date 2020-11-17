@@ -292,7 +292,6 @@ void ImageViewer::bitDynamikColor(int bits){
 
             }
 
-
             imageLabel->setPixmap(QPixmap::fromImage(*imageCopy));
 
         }
@@ -303,12 +302,10 @@ void ImageViewer::bitDynamikColor(int bits){
 
 void ImageViewer::histogram() {
 
-
-
     QPixmap histogramMap(256,256);
     histogramMap.fill(QColor("white"));
     myHistogram = new QImage(256, 100, QImage::Format_RGB32);
-    myHistogram->fill(Qt::black);
+    myHistogram->fill(Qt::white);
 
 
     int myArray[256]= {0};
@@ -340,12 +337,134 @@ void ImageViewer::histogram() {
 
     for (int z = 0; z<256; z++){
         for (int h=0; h<(100-endWert[z]); h++){
-            myHistogram->setPixelColor(z,h, Qt::white);
+            myHistogram->setPixelColor(z,h, Qt::black);
         }
 
     }
     meinHistogram->setPixmap(QPixmap::fromImage(*myHistogram));
     meinHistogram->show();
+
+}
+
+/************************************************/
+
+
+
+
+void ImageViewer::histogramColor() {
+    *imageCopy = *image;
+
+    myHistogramColor = new QImage(256, 100, QImage::Format_RGB32);
+    myHistogramColor->fill(Qt::black);
+
+
+    int myArrayRed[256]= {0};
+    int myArrayGreen[256]= {0};
+    int myArrayBlue[256]= {0};
+    int myValue = 0;
+
+
+    for (int i = 0; i<image->width() ;i++) {
+        for (int j = 0; j<image->height(); j++){
+            myValue = qRed(imageCopy->pixel(i,j));
+            myArrayRed[myValue] += 1;
+
+
+            myValue = qGreen(imageCopy->pixel(i,j));
+            myArrayGreen[myValue] += 1;
+
+            myValue = qBlue(imageCopy->pixel(i,j));
+            myArrayBlue[myValue] += 1;
+
+        }
+    }
+
+
+    int greatestNumber = 0;
+
+    for(int c = 0; c<256; c++){
+        if (myArrayRed[c] > greatestNumber){
+            greatestNumber = myArrayRed[c];
+
+        }
+
+        else if(myArrayGreen[c] > greatestNumber){
+            greatestNumber = myArrayGreen[c];
+
+        }
+        else if(myArrayBlue[c] > greatestNumber){
+            greatestNumber = myArrayBlue[c];
+
+        }
+
+    }
+
+
+
+    int endWertRed[256] = {0};
+    for (int k = 0; k<256 ;k++){
+        endWertRed[k] = (myArrayRed[k]/(greatestNumber/100));
+
+    }
+
+    int endWertGreen[256] = {0};
+    for (int k = 0; k<256 ;k++){
+        endWertGreen[k] = (myArrayGreen[k]/(greatestNumber/100));
+
+    }
+
+    int endWertBlue[256] = {0};
+    for (int k = 0; k<256 ;k++){
+        endWertBlue[k] = (myArrayBlue[k]/(greatestNumber/100));
+
+    }
+
+
+    for (int z = 0; z<256; z++){
+        for (int h=0; h<(endWertRed[z]); h++){
+            myHistogramColor->setPixelColor(z,h, Qt::red);
+        }
+    }
+
+    for (int z = 0; z<256; z++){
+        for (int h=0; h<(endWertGreen[z]); h++){
+            if(QRgb(myHistogramColor->pixel(z,h)) == Qt::red){
+             myHistogramColor->setPixelColor(z,h, Qt::yellow);
+            }
+
+            myHistogramColor->setPixelColor(z,h, Qt::green);
+        }
+    }
+
+    for (int z = 0; z<256; z++){
+        for (int h=0; h<(endWertBlue[z]); h++){
+            if(QRgb(myHistogramColor->pixel(z,h)) == Qt::red){
+             myHistogramColor->setPixelColor(z,h, Qt::magenta);
+            }
+
+            else if(QRgb(myHistogramColor->pixel(z,h)) == Qt::green){
+                myHistogramColor->setPixelColor(z,h, Qt::cyan);
+
+            }
+            else if(QRgb(myHistogramColor->pixel(z,h)) ==Qt::yellow){
+                myHistogramColor->setPixelColor(z,h, Qt::gray);
+
+            }
+
+
+            myHistogramColor->setPixelColor(z,h, Qt::blue);
+        }
+    }
+
+
+
+
+
+
+    QImage mirrorImage  = myHistogramColor->mirrored(false,true);
+    myHistogramColorLabel->setPixmap(QPixmap::fromImage(mirrorImage));
+    myHistogramColorLabel->show();
+
 
 }
 void ImageViewer::helligkeit(int helligkeitswert) {
@@ -601,7 +720,7 @@ void ImageViewer::autoKontrast(int kontrastWert) {
 
 
 
-    /****************************************************************************************
+/****************************************************************************************
 *
 *  mit dieser Methode können sie sich pro Aufgabe ein  Tab anlegen, in der die Ein-
 *  stellungen per Slider, Button, Checkbox etc. gemacht werden und die zu implemen-
@@ -612,147 +731,144 @@ void ImageViewer::autoKontrast(int kontrastWert) {
 
 
 
-    void ImageViewer::generateControlPanels()
-    {
-        //  ******************************    Aufgabe 1    ******************************  //
+void ImageViewer::generateControlPanels()
+{
+    //  ******************************    Aufgabe 1    ******************************  //
 
-        m_option_panel1 = new QWidget();
-        m_option_layout1 = new QVBoxLayout();
-        m_option_panel1->setLayout(m_option_layout1);
+    m_option_panel1 = new QWidget();
+    m_option_layout1 = new QVBoxLayout();
+    m_option_panel1->setLayout(m_option_layout1);
 
-        sliderCross = new QSlider(Qt::Orientation::Horizontal, this);
-        sliderCross->setRange(1,100);
-        sliderCross->setToolTip("Cross Slider");
-        sliderCross->setTickPosition(QSlider::TicksBelow);
-        sliderCross->setTickInterval(1);
+    sliderCross = new QSlider(Qt::Orientation::Horizontal, this);
+    sliderCross->setRange(1,100);
+    sliderCross->setToolTip("Cross Slider");
+    sliderCross->setTickPosition(QSlider::TicksBelow);
+    sliderCross->setTickInterval(1);
 
-        QObject::connect(sliderCross, SIGNAL(valueChanged(int)),this,SLOT(applyCross(int)));
+    QObject::connect(sliderCross, SIGNAL(valueChanged(int)),this,SLOT(applyCross(int)));
 
-        m_option_layout1->addWidget(sliderCross);
+    m_option_layout1->addWidget(sliderCross);
 
-        tabWidget->addTab(m_option_panel1,"Aufgabenblatt 1");
-
-
-        //  ******************************    Aufgabe 2    ******************************  //
-
-        m_option_panel2 = new QWidget();
-        m_option_layout2 = new QVBoxLayout();
-        m_option_panel2->setLayout(m_option_layout2);
+    tabWidget->addTab(m_option_panel1,"Aufgabenblatt 1");
 
 
+    //  ******************************    Aufgabe 2    ******************************  //
 
-        buttonMittlereHelligkeit = new QPushButton();
-        buttonMittlereHelligkeit ->setText("Mittlere Helligkeit");
-        QObject::connect(buttonMittlereHelligkeit, SIGNAL (clicked()), this, SLOT (averageBrightness()));
+    m_option_panel2 = new QWidget();
+    m_option_layout2 = new QVBoxLayout();
+    m_option_panel2->setLayout(m_option_layout2);
 
-        buttonVarianz = new QPushButton();
-        buttonVarianz ->setText("Varianz");
-        QObject::connect(buttonVarianz, SIGNAL (clicked()), this, SLOT (varianz()));
+    buttonMittlereHelligkeit = new QPushButton();
+    buttonMittlereHelligkeit ->setText("Mittlere Helligkeit");
+    QObject::connect(buttonMittlereHelligkeit, SIGNAL (clicked()), this, SLOT (averageBrightness()));
 
-
-        labelMiddleBrightness = new QLabel();
-        labelVarianz = new QLabel();
-
-        buttonGray = new QPushButton();
-        buttonGray->setText("Graustufen");
-        QObject::connect(buttonGray, SIGNAL (clicked()), this, SLOT (convertToGrayscale()));
-
-        buttonHistogram = new QPushButton();
-        buttonHistogram->setText("Draw Histogram");
-        QObject::connect(buttonHistogram, SIGNAL (clicked()), this, SLOT (histogram()));
-
-        sliderBit = new QSlider(Qt::Orientation::Horizontal, this);
-        sliderBit->setRange(1,8);
-        sliderBit->setToolTip("Bit Slider");
-        sliderBit->setTickPosition(QSlider::TicksBelow);
-        sliderBit->setTickInterval(1);
+    buttonVarianz = new QPushButton();
+    buttonVarianz ->setText("Varianz");
+    QObject::connect(buttonVarianz, SIGNAL (clicked()), this, SLOT (varianz()));
 
 
-        QObject::connect(sliderBit, SIGNAL(valueChanged(int)),this,SLOT(bitDynamik(int)));
-        meinHistogram = new QLabel(this);
+    labelMiddleBrightness = new QLabel();
+    labelVarianz = new QLabel();
+
+    buttonGray = new QPushButton();
+    buttonGray->setText("Graustufen");
+    QObject::connect(buttonGray, SIGNAL (clicked()), this, SLOT (convertToGrayscale()));
+
+    buttonHistogram = new QPushButton();
+    buttonHistogram->setText("Draw Histogram");
+    QObject::connect(buttonHistogram, SIGNAL (clicked()), this, SLOT (histogram()));
+
+    sliderBit = new QSlider(Qt::Orientation::Horizontal, this);
+    sliderBit->setRange(1,8);
+    sliderBit->setToolTip("Bit Slider");
+    sliderBit->setTickPosition(QSlider::TicksBelow);
+    sliderBit->setTickInterval(1);
+
+    QObject::connect(sliderBit, SIGNAL(valueChanged(int)),this,SLOT(bitDynamik(int)));
+    meinHistogram = new QLabel(this);
+
+    QSlider *sliderBright = new QSlider(Qt::Horizontal,0);
+    sliderBright->setRange(-255,255);
+    sliderBright->setToolTip("Helligkeitsslider");
+    sliderBright->setTickPosition(QSlider::TicksBelow);
+    sliderBright->setTickInterval(50);
+    connect(sliderBright, SIGNAL(valueChanged(int)),this, SLOT(helligkeit(int)));
+
+    QSlider *sliderKontrast = new QSlider(Qt::Horizontal,0);
+    sliderKontrast->setRange(-10,10);
+    sliderKontrast->setTickPosition(QSlider::TicksBelow);
+    sliderKontrast->setTickInterval(1);
+    sliderKontrast->setToolTip("Kontrastslider");
+    connect(sliderKontrast, SIGNAL(valueChanged(int)),this, SLOT(kontrast(int)));
+
+    QSlider *autoKontrastSlider = new QSlider(Qt::Horizontal,0);
+    autoKontrastSlider->setRange(1,100);
+    autoKontrastSlider->setTickPosition(QSlider::TicksBelow);
+    autoKontrastSlider->setTickInterval(1);
+    autoKontrastSlider->setToolTip("Autokontrastslider");
+    connect(autoKontrastSlider, SIGNAL(valueChanged(int)),this, SLOT(autoKontrast(int)));
+
+    m_option_layout2->addWidget(buttonGray);
+    m_option_layout2->addWidget(sliderBit);
+    //m_option_layout2->addWidget(labelSliderTick);
+    m_option_layout2->addWidget(buttonHistogram);
+    m_option_layout2->addWidget(meinHistogram);
+    m_option_layout2->addWidget(sliderBright);
+    m_option_layout2->addWidget(buttonMittlereHelligkeit);
+    m_option_layout2->addWidget(labelMiddleBrightness);
+    m_option_layout2->addWidget(buttonVarianz);
+    m_option_layout2->addWidget(labelVarianz);
+    m_option_layout2->addWidget(sliderKontrast);
+    m_option_layout2->addWidget(autoKontrastSlider);
+
+    tabWidget->addTab(m_option_panel2,"Aufgabenblatt 2");
+    tabWidget->show();
 
 
-        QSlider *sliderBright = new QSlider(Qt::Horizontal,0);
-        sliderBright->setRange(-255,255);
-        sliderBright->setToolTip("Helligkeitsslider");
-        sliderBright->setTickPosition(QSlider::TicksBelow);
-        sliderBright->setTickInterval(50);
-        connect(sliderBright, SIGNAL(valueChanged(int)),this, SLOT(helligkeit(int)));
+    //  ******************************    Aufgabe 3    ******************************  //
+
+    m_option_panel3 = new QWidget();
+    m_option_layout3 = new QVBoxLayout();
+    m_option_panel3 ->setLayout(m_option_layout3);
+
+    QSlider *sliderColorBit = new QSlider(Qt::Horizontal,0);
+    sliderColorBit->setRange(1,8);
+    sliderColorBit->setTickPosition(QSlider::TicksBelow);
+    sliderColorBit->setTickInterval(1);
+    sliderColorBit->setToolTip("Bit-Dynamik Farbe");
+    connect(sliderColorBit, SIGNAL(valueChanged(int)),this, SLOT(bitDynamikColor(int)));
+
+    QSlider *sliderColorBrightness = new QSlider(Qt::Horizontal,0);
+    sliderColorBrightness->setRange(-255,255);
+    sliderColorBrightness->setTickPosition(QSlider::TicksBelow);
+    sliderColorBrightness->setTickInterval(10);
+    sliderColorBrightness->setToolTip("Helligkeitsslider für Farben");
+    connect(sliderColorBrightness, SIGNAL(valueChanged(int)),this, SLOT(helligkeitColor(int)));
+
+    myHistogramColorLabel = new QLabel(this);
 
 
-        QSlider *sliderKontrast = new QSlider(Qt::Horizontal,0);
-        sliderKontrast->setRange(-10,10);
-        sliderKontrast->setTickPosition(QSlider::TicksBelow);
-        sliderKontrast->setTickInterval(1);
-        sliderKontrast->setToolTip("Kontrastslider");
-        connect(sliderKontrast, SIGNAL(valueChanged(int)),this, SLOT(kontrast(int)));
-
-
-        QSlider *autoKontrastSlider = new QSlider(Qt::Horizontal,0);
-        autoKontrastSlider->setRange(1,100);
-        autoKontrastSlider->setTickPosition(QSlider::TicksBelow);
-        autoKontrastSlider->setTickInterval(1);
-        autoKontrastSlider->setToolTip("Autokontrastslider");
-        connect(autoKontrastSlider, SIGNAL(valueChanged(int)),this, SLOT(autoKontrast(int)));
-
-
-
-        m_option_layout2->addWidget(buttonGray);
-        m_option_layout2->addWidget(sliderBit);
-        //m_option_layout2->addWidget(labelSliderTick);
-        m_option_layout2->addWidget(buttonHistogram);
-        m_option_layout2->addWidget(meinHistogram);
-        m_option_layout2->addWidget(sliderBright);
-        m_option_layout2->addWidget(buttonMittlereHelligkeit);
-        m_option_layout2->addWidget(labelMiddleBrightness);
-        m_option_layout2->addWidget(buttonVarianz);
-        m_option_layout2->addWidget(labelVarianz);
-        m_option_layout2->addWidget(sliderKontrast);
-        m_option_layout2->addWidget(autoKontrastSlider);
-
-        tabWidget->addTab(m_option_panel2,"Aufgabenblatt 2");
-        tabWidget->show();
-
-
-
-
-        //  ******************************    Aufgabe 3    ******************************  //
-
-        m_option_panel3 = new QWidget();
-        m_option_layout3 = new QVBoxLayout();
-        m_option_panel3 ->setLayout(m_option_layout3);
-
-        QSlider *sliderColorBit = new QSlider(Qt::Horizontal,0);
-        sliderColorBit->setRange(1,8);
-        sliderColorBit->setTickPosition(QSlider::TicksBelow);
-        sliderColorBit->setTickInterval(1);
-        sliderColorBit->setToolTip("Bit-Dynamik Farbe");
-        connect(sliderColorBit, SIGNAL(valueChanged(int)),this, SLOT(bitDynamikColor(int)));
-
-
-        QSlider *sliderColorBrightness = new QSlider(Qt::Horizontal,0);
-        sliderColorBrightness->setRange(-255,255);
-        sliderColorBrightness->setTickPosition(QSlider::TicksBelow);
-        sliderColorBrightness->setTickInterval(10);
-        sliderColorBrightness->setToolTip("Helligkeitsslider für Farben");
-        connect(sliderColorBrightness, SIGNAL(valueChanged(int)),this, SLOT(helligkeitColor(int)));
+    colorHistgoramButton = new QPushButton();
+    colorHistgoramButton->setText("colorHistgoramButton");
+    QObject::connect(colorHistgoramButton, SIGNAL (clicked()), this, SLOT (histogramColor()));
 
 
 
+    m_option_layout3->addWidget(sliderColorBit);
+    m_option_layout3->addWidget(sliderColorBrightness);
+    m_option_layout3->addWidget(myHistogramColorLabel);
+    m_option_layout3->addWidget(colorHistgoramButton);
 
 
-        m_option_layout3->addWidget(sliderColorBit);
-        m_option_layout3->addWidget(sliderColorBrightness);
-
-        tabWidget->addTab(m_option_panel3,"Aufgabenblatt 3");
+    tabWidget->addTab(m_option_panel3,"Aufgabenblatt 3");
 
 
 
-        // Hinweis: Es bietet sich an pro Aufgabe jeweils einen solchen Tab zu erstellen
+    // Hinweis: Es bietet sich an pro Aufgabe jeweils einen solchen Tab zu erstellen
 
-    }
+}
 
-    /****************************************************************************************
+/****************************************************************************************
 *
 *   ab hier kommen technische Details, die nicht notwenig für das Verständnis und die
 *   Bearbeitung sind.
@@ -762,305 +878,305 @@ void ImageViewer::autoKontrast(int kontrastWert) {
 
 
 
-    void ImageViewer::startLogging()
+void ImageViewer::startLogging()
+{
+    //LogFile
+    logFile.open("log.txt", std::ios::out);
+    logFile << "Logging: \n" << std::endl;
+}
+
+void ImageViewer::renewLogging()
+{
+    QFile file("log.txt"); // Create a file handle for the file named
+    QString line;
+    file.open(QIODevice::ReadOnly); // Open the file
+
+    QTextStream stream( &file ); // Set the stream to read from myFile
+    logBrowser->clear();
+    while(!stream.atEnd()){
+
+        line = stream.readLine(); // this reads a line (QString) from the file
+        logBrowser->append(line);
+    }
+}
+
+
+void ImageViewer::resizeEvent(QResizeEvent * event)
+{
+    QMainWindow::resizeEvent(event);
+    centralwidget->setMinimumWidth(width());
+    centralwidget->setMinimumHeight(height());
+    centralwidget->setMaximumWidth(width());
+    centralwidget->setMaximumHeight(height());
+    logBrowser->setMinimumWidth(width()-40);
+    logBrowser->setMaximumWidth(width()-40);
+}
+
+void ImageViewer::updateImageDisplay()
+{
+
+    imageLabel->setPixmap(QPixmap::fromImage(*image));
+}
+
+
+void ImageViewer::generateMainGui()
+{
+    /* Tab widget */
+    tabWidget = new QTabWidget(this);
+    tabWidget->setObjectName(QStringLiteral("tabWidget"));
+
+
+
+    /* Center widget */
+    centralwidget = new QWidget(this);
+    centralwidget->setObjectName(QStringLiteral("centralwidget"));
+    //centralwidget->setFixedSize(200,200);
+    //setCentralWidget(centralwidget);
+
+    imageLabel = new QLabel;
+    imageLabel->setBackgroundRole(QPalette::Base);
+    imageLabel->setSizePolicy(QSizePolicy::Ignored, QSizePolicy::Ignored);
+    imageLabel->setScaledContents(true);
+
+
+    /* Center widget */
+    scrollArea = new QScrollArea;
+    scrollArea->setBackgroundRole(QPalette::Dark);
+    scrollArea->setWidget(imageLabel);
+
+
+    setCentralWidget(scrollArea);
+
+    /* HBox layout */
+    QGridLayout* gLayout = new QGridLayout(centralwidget);
+    gLayout->setObjectName(QStringLiteral("hboxLayout"));
+    gLayout->addWidget(new QLabel(),1,1);
+    gLayout->setVerticalSpacing(50);
+    gLayout->addWidget(tabWidget,2,1);
+    gLayout->addWidget(scrollArea,2,2);
+
+    logBrowser= new QTextEdit(this);
+    logBrowser->setMinimumHeight(100);
+    logBrowser->setMaximumHeight(200);
+    logBrowser->setMinimumWidth(width());
+    logBrowser->setMaximumWidth(width());
+    gLayout->addWidget(logBrowser,3,1,1,2);
+    gLayout->setVerticalSpacing(50);
+}
+
+
+bool ImageViewer::loadFile(const QString &fileName)
+{
+    if(image!=NULL)
     {
-        //LogFile
-        logFile.open("log.txt", std::ios::out);
-        logFile << "Logging: \n" << std::endl;
+        delete image;
+        image=NULL;
     }
 
-    void ImageViewer::renewLogging()
-    {
-        QFile file("log.txt"); // Create a file handle for the file named
-        QString line;
-        file.open(QIODevice::ReadOnly); // Open the file
-
-        QTextStream stream( &file ); // Set the stream to read from myFile
-        logBrowser->clear();
-        while(!stream.atEnd()){
-
-            line = stream.readLine(); // this reads a line (QString) from the file
-            logBrowser->append(line);
-        }
-    }
-
-
-    void ImageViewer::resizeEvent(QResizeEvent * event)
-    {
-        QMainWindow::resizeEvent(event);
-        centralwidget->setMinimumWidth(width());
-        centralwidget->setMinimumHeight(height());
-        centralwidget->setMaximumWidth(width());
-        centralwidget->setMaximumHeight(height());
-        logBrowser->setMinimumWidth(width()-40);
-        logBrowser->setMaximumWidth(width()-40);
-    }
-
-    void ImageViewer::updateImageDisplay()
-    {
-
-        imageLabel->setPixmap(QPixmap::fromImage(*image));
-    }
-
-
-    void ImageViewer::generateMainGui()
-    {
-        /* Tab widget */
-        tabWidget = new QTabWidget(this);
-        tabWidget->setObjectName(QStringLiteral("tabWidget"));
-
-
-
-        /* Center widget */
-        centralwidget = new QWidget(this);
-        centralwidget->setObjectName(QStringLiteral("centralwidget"));
-        //centralwidget->setFixedSize(200,200);
-        //setCentralWidget(centralwidget);
-
-        imageLabel = new QLabel;
-        imageLabel->setBackgroundRole(QPalette::Base);
-        imageLabel->setSizePolicy(QSizePolicy::Ignored, QSizePolicy::Ignored);
-        imageLabel->setScaledContents(true);
-
-
-        /* Center widget */
-        scrollArea = new QScrollArea;
-        scrollArea->setBackgroundRole(QPalette::Dark);
-        scrollArea->setWidget(imageLabel);
-
-
-        setCentralWidget(scrollArea);
-
-        /* HBox layout */
-        QGridLayout* gLayout = new QGridLayout(centralwidget);
-        gLayout->setObjectName(QStringLiteral("hboxLayout"));
-        gLayout->addWidget(new QLabel(),1,1);
-        gLayout->setVerticalSpacing(50);
-        gLayout->addWidget(tabWidget,2,1);
-        gLayout->addWidget(scrollArea,2,2);
-
-        logBrowser= new QTextEdit(this);
-        logBrowser->setMinimumHeight(100);
-        logBrowser->setMaximumHeight(200);
-        logBrowser->setMinimumWidth(width());
-        logBrowser->setMaximumWidth(width());
-        gLayout->addWidget(logBrowser,3,1,1,2);
-        gLayout->setVerticalSpacing(50);
-    }
-
-
-    bool ImageViewer::loadFile(const QString &fileName)
-    {
-        if(image!=NULL)
-        {
-            delete image;
-            image=NULL;
-        }
-
-        image = new QImage(fileName);
+    image = new QImage(fileName);
 
 
 
 
-        if (image->isNull()) {
-            QMessageBox::information(this, QGuiApplication::applicationDisplayName(),
-                                     tr("Cannot load %1.").arg(QDir::toNativeSeparators(fileName)));
-            setWindowFilePath(QString());
-            imageLabel->setPixmap(QPixmap());
-            imageLabel->adjustSize();
-            return false;
-        }
-
-        scaleFactor = 1.0;
-
-
-        updateImageDisplay();
-
-        printAct->setEnabled(true);
-        fitToWindowAct->setEnabled(true);
-        updateActions();
-
-        if (!fitToWindowAct->isChecked())
-            imageLabel->adjustSize();
-
-        setWindowFilePath(fileName);
-        logFile << "geladen: " << fileName.toStdString().c_str()  << std::endl;
-        createImageColor();
-        renewLogging();
-
-
-
-        return true;
-    }
-
-
-
-
-    void ImageViewer::open()
-    {
-        QStringList mimeTypeFilters;
-        foreach (const QByteArray &mimeTypeName, QImageReader::supportedMimeTypes())
-            mimeTypeFilters.append(mimeTypeName);
-        mimeTypeFilters.sort();
-        const QStringList picturesLocations = QStandardPaths::standardLocations(QStandardPaths::PicturesLocation);
-        QFileDialog dialog(this, tr("Open File"),
-                           picturesLocations.isEmpty() ? QDir::currentPath() : picturesLocations.first());
-        dialog.setAcceptMode(QFileDialog::AcceptOpen);
-        dialog.setMimeTypeFilters(mimeTypeFilters);
-        dialog.selectMimeTypeFilter("image/png");
-
-        while (dialog.exec() == QDialog::Accepted && !loadFile(dialog.selectedFiles().first())) {}
-    }
-
-    void ImageViewer::print()
-    {
-        Q_ASSERT(imageLabel->pixmap());
-#if !defined(QT_NO_PRINTER) && !defined(QT_NO_PRINTDIALOG)
-        QPrintDialog dialog(&printer, this);
-        if (dialog.exec()) {
-            QPainter painter(&printer);
-            QRect rect = painter.viewport();
-            QSize size = imageLabel->pixmap()->size();
-            size.scale(rect.size(), Qt::KeepAspectRatio);
-            painter.setViewport(rect.x(), rect.y(), size.width(), size.height());
-            painter.setWindow(imageLabel->pixmap()->rect());
-            painter.drawPixmap(0, 0, *imageLabel->pixmap());
-        }
-#endif
-    }
-
-    void ImageViewer::zoomIn()
-    {
-        scaleImage(1.25);
-    }
-
-    void ImageViewer::zoomOut()
-    {
-        scaleImage(0.8);
-    }
-
-    void ImageViewer::normalSize()
-    {
+    if (image->isNull()) {
+        QMessageBox::information(this, QGuiApplication::applicationDisplayName(),
+                                 tr("Cannot load %1.").arg(QDir::toNativeSeparators(fileName)));
+        setWindowFilePath(QString());
+        imageLabel->setPixmap(QPixmap());
         imageLabel->adjustSize();
-        scaleFactor = 1.0;
+        return false;
     }
 
-    void ImageViewer::fitToWindow()
-    {
-        bool fitToWindow = fitToWindowAct->isChecked();
-        scrollArea->setWidgetResizable(fitToWindow);
-        if (!fitToWindow) {
-            normalSize();
-        }
-        updateActions();
+    scaleFactor = 1.0;
+
+
+    updateImageDisplay();
+
+    printAct->setEnabled(true);
+    fitToWindowAct->setEnabled(true);
+    updateActions();
+
+    if (!fitToWindowAct->isChecked())
+        imageLabel->adjustSize();
+
+    setWindowFilePath(fileName);
+    logFile << "geladen: " << fileName.toStdString().c_str()  << std::endl;
+    createImageColor();
+    renewLogging();
+
+
+
+    return true;
+}
+
+
+
+
+void ImageViewer::open()
+{
+    QStringList mimeTypeFilters;
+    foreach (const QByteArray &mimeTypeName, QImageReader::supportedMimeTypes())
+        mimeTypeFilters.append(mimeTypeName);
+    mimeTypeFilters.sort();
+    const QStringList picturesLocations = QStandardPaths::standardLocations(QStandardPaths::PicturesLocation);
+    QFileDialog dialog(this, tr("Open File"),
+                       picturesLocations.isEmpty() ? QDir::currentPath() : picturesLocations.first());
+    dialog.setAcceptMode(QFileDialog::AcceptOpen);
+    dialog.setMimeTypeFilters(mimeTypeFilters);
+    dialog.selectMimeTypeFilter("image/png");
+
+    while (dialog.exec() == QDialog::Accepted && !loadFile(dialog.selectedFiles().first())) {}
+}
+
+void ImageViewer::print()
+{
+    Q_ASSERT(imageLabel->pixmap());
+#if !defined(QT_NO_PRINTER) && !defined(QT_NO_PRINTDIALOG)
+    QPrintDialog dialog(&printer, this);
+    if (dialog.exec()) {
+        QPainter painter(&printer);
+        QRect rect = painter.viewport();
+        QSize size = imageLabel->pixmap()->size();
+        size.scale(rect.size(), Qt::KeepAspectRatio);
+        painter.setViewport(rect.x(), rect.y(), size.width(), size.height());
+        painter.setWindow(imageLabel->pixmap()->rect());
+        painter.drawPixmap(0, 0, *imageLabel->pixmap());
     }
+#endif
+}
 
-    void ImageViewer::about()
-    {
-        QMessageBox::about(this, tr("About Image Viewer"),
-                           tr("<p>The <b>Image Viewer</b> example shows how to combine QLabel "
-                              "and QScrollArea to display an image. QLabel is typically used "
-                              "for displaying a text, but it can also display an image. "
-                              "QScrollArea provides a scrolling view around another widget. "
-                              "If the child widget exceeds the size of the frame, QScrollArea "
-                              "automatically provides scroll bars. </p><p>The example "
-                              "demonstrates how QLabel's ability to scale its contents "
-                              "(QLabel::scaledContents), and QScrollArea's ability to "
-                              "automatically resize its contents "
-                              "(QScrollArea::widgetResizable), can be used to implement "
-                              "zooming and scaling features. </p><p>In addition the example "
-                              "shows how to use QPainter to print an image.</p>"));
+void ImageViewer::zoomIn()
+{
+    scaleImage(1.25);
+}
+
+void ImageViewer::zoomOut()
+{
+    scaleImage(0.8);
+}
+
+void ImageViewer::normalSize()
+{
+    imageLabel->adjustSize();
+    scaleFactor = 1.0;
+}
+
+void ImageViewer::fitToWindow()
+{
+    bool fitToWindow = fitToWindowAct->isChecked();
+    scrollArea->setWidgetResizable(fitToWindow);
+    if (!fitToWindow) {
+        normalSize();
     }
+    updateActions();
+}
 
-    void ImageViewer::createActions()
-    {
-        openAct = new QAction(tr("&Open..."), this);
-        openAct->setShortcut(tr("Ctrl+O"));
-        connect(openAct, SIGNAL(triggered()), this, SLOT(open()));
+void ImageViewer::about()
+{
+    QMessageBox::about(this, tr("About Image Viewer"),
+                       tr("<p>The <b>Image Viewer</b> example shows how to combine QLabel "
+                          "and QScrollArea to display an image. QLabel is typically used "
+                          "for displaying a text, but it can also display an image. "
+                          "QScrollArea provides a scrolling view around another widget. "
+                          "If the child widget exceeds the size of the frame, QScrollArea "
+                          "automatically provides scroll bars. </p><p>The example "
+                          "demonstrates how QLabel's ability to scale its contents "
+                          "(QLabel::scaledContents), and QScrollArea's ability to "
+                          "automatically resize its contents "
+                          "(QScrollArea::widgetResizable), can be used to implement "
+                          "zooming and scaling features. </p><p>In addition the example "
+                          "shows how to use QPainter to print an image.</p>"));
+}
 
-        printAct = new QAction(tr("&Print..."), this);
-        printAct->setShortcut(tr("Ctrl+P"));
-        printAct->setEnabled(false);
-        connect(printAct, SIGNAL(triggered()), this, SLOT(print()));
+void ImageViewer::createActions()
+{
+    openAct = new QAction(tr("&Open..."), this);
+    openAct->setShortcut(tr("Ctrl+O"));
+    connect(openAct, SIGNAL(triggered()), this, SLOT(open()));
 
-        exitAct = new QAction(tr("E&xit"), this);
-        exitAct->setShortcut(tr("Ctrl+Q"));
-        connect(exitAct, SIGNAL(triggered()), this, SLOT(close()));
+    printAct = new QAction(tr("&Print..."), this);
+    printAct->setShortcut(tr("Ctrl+P"));
+    printAct->setEnabled(false);
+    connect(printAct, SIGNAL(triggered()), this, SLOT(print()));
 
-        zoomInAct = new QAction(tr("Zoom &In (25%)"), this);
-        zoomInAct->setShortcut(tr("Ctrl++"));
-        zoomInAct->setEnabled(false);
-        connect(zoomInAct, SIGNAL(triggered()), this, SLOT(zoomIn()));
+    exitAct = new QAction(tr("E&xit"), this);
+    exitAct->setShortcut(tr("Ctrl+Q"));
+    connect(exitAct, SIGNAL(triggered()), this, SLOT(close()));
 
-        zoomOutAct = new QAction(tr("Zoom &Out (25%)"), this);
-        zoomOutAct->setShortcut(tr("Ctrl+-"));
-        zoomOutAct->setEnabled(false);
-        connect(zoomOutAct, SIGNAL(triggered()), this, SLOT(zoomOut()));
+    zoomInAct = new QAction(tr("Zoom &In (25%)"), this);
+    zoomInAct->setShortcut(tr("Ctrl++"));
+    zoomInAct->setEnabled(false);
+    connect(zoomInAct, SIGNAL(triggered()), this, SLOT(zoomIn()));
 
-        normalSizeAct = new QAction(tr("&Normal Size"), this);
-        normalSizeAct->setShortcut(tr("Ctrl+S"));
-        normalSizeAct->setEnabled(false);
-        connect(normalSizeAct, SIGNAL(triggered()), this, SLOT(normalSize()));
+    zoomOutAct = new QAction(tr("Zoom &Out (25%)"), this);
+    zoomOutAct->setShortcut(tr("Ctrl+-"));
+    zoomOutAct->setEnabled(false);
+    connect(zoomOutAct, SIGNAL(triggered()), this, SLOT(zoomOut()));
 
-        fitToWindowAct = new QAction(tr("&Fit to Window"), this);
-        fitToWindowAct->setEnabled(false);
-        fitToWindowAct->setCheckable(true);
-        fitToWindowAct->setShortcut(tr("Ctrl+F"));
-        connect(fitToWindowAct, SIGNAL(triggered()), this, SLOT(fitToWindow()));
+    normalSizeAct = new QAction(tr("&Normal Size"), this);
+    normalSizeAct->setShortcut(tr("Ctrl+S"));
+    normalSizeAct->setEnabled(false);
+    connect(normalSizeAct, SIGNAL(triggered()), this, SLOT(normalSize()));
 
-        aboutAct = new QAction(tr("&About"), this);
-        connect(aboutAct, SIGNAL(triggered()), this, SLOT(about()));
+    fitToWindowAct = new QAction(tr("&Fit to Window"), this);
+    fitToWindowAct->setEnabled(false);
+    fitToWindowAct->setCheckable(true);
+    fitToWindowAct->setShortcut(tr("Ctrl+F"));
+    connect(fitToWindowAct, SIGNAL(triggered()), this, SLOT(fitToWindow()));
 
-        aboutQtAct = new QAction(tr("About &Qt"), this);
-        connect(aboutQtAct, SIGNAL(triggered()), qApp, SLOT(aboutQt()));
-    }
+    aboutAct = new QAction(tr("&About"), this);
+    connect(aboutAct, SIGNAL(triggered()), this, SLOT(about()));
 
-    void ImageViewer::createMenus()
-    {
-        fileMenu = new QMenu(tr("&File"), this);
-        fileMenu->addAction(openAct);
-        fileMenu->addAction(printAct);
-        fileMenu->addSeparator();
-        fileMenu->addAction(exitAct);
+    aboutQtAct = new QAction(tr("About &Qt"), this);
+    connect(aboutQtAct, SIGNAL(triggered()), qApp, SLOT(aboutQt()));
+}
 
-        viewMenu = new QMenu(tr("&View"), this);
-        viewMenu->addAction(zoomInAct);
-        viewMenu->addAction(zoomOutAct);
-        viewMenu->addAction(normalSizeAct);
-        viewMenu->addSeparator();
-        viewMenu->addAction(fitToWindowAct);
+void ImageViewer::createMenus()
+{
+    fileMenu = new QMenu(tr("&File"), this);
+    fileMenu->addAction(openAct);
+    fileMenu->addAction(printAct);
+    fileMenu->addSeparator();
+    fileMenu->addAction(exitAct);
 
-        helpMenu = new QMenu(tr("&Help"), this);
-        helpMenu->addAction(aboutAct);
-        helpMenu->addAction(aboutQtAct);
+    viewMenu = new QMenu(tr("&View"), this);
+    viewMenu->addAction(zoomInAct);
+    viewMenu->addAction(zoomOutAct);
+    viewMenu->addAction(normalSizeAct);
+    viewMenu->addSeparator();
+    viewMenu->addAction(fitToWindowAct);
 
-        menuBar()->addMenu(fileMenu);
-        menuBar()->addMenu(viewMenu);
-        menuBar()->addMenu(helpMenu);
-    }
+    helpMenu = new QMenu(tr("&Help"), this);
+    helpMenu->addAction(aboutAct);
+    helpMenu->addAction(aboutQtAct);
 
-    void ImageViewer::updateActions()
-    {
-        zoomInAct->setEnabled(!fitToWindowAct->isChecked());
-        zoomOutAct->setEnabled(!fitToWindowAct->isChecked());
-        normalSizeAct->setEnabled(!fitToWindowAct->isChecked());
-    }
+    menuBar()->addMenu(fileMenu);
+    menuBar()->addMenu(viewMenu);
+    menuBar()->addMenu(helpMenu);
+}
 
-    void ImageViewer::scaleImage(double factor)
-    {
-        Q_ASSERT(imageLabel->pixmap());
-        scaleFactor *= factor;
-        imageLabel->resize(scaleFactor * imageLabel->pixmap()->size());
+void ImageViewer::updateActions()
+{
+    zoomInAct->setEnabled(!fitToWindowAct->isChecked());
+    zoomOutAct->setEnabled(!fitToWindowAct->isChecked());
+    normalSizeAct->setEnabled(!fitToWindowAct->isChecked());
+}
 
-        adjustScrollBar(scrollArea->horizontalScrollBar(), factor);
-        adjustScrollBar(scrollArea->verticalScrollBar(), factor);
+void ImageViewer::scaleImage(double factor)
+{
+    Q_ASSERT(imageLabel->pixmap());
+    scaleFactor *= factor;
+    imageLabel->resize(scaleFactor * imageLabel->pixmap()->size());
 
-        zoomInAct->setEnabled(scaleFactor < 10.0);
-        zoomOutAct->setEnabled(scaleFactor > 0.05);
-    }
+    adjustScrollBar(scrollArea->horizontalScrollBar(), factor);
+    adjustScrollBar(scrollArea->verticalScrollBar(), factor);
 
-    void ImageViewer::adjustScrollBar(QScrollBar *scrollBar, double factor)
-    {
-        scrollBar->setValue(int(factor * scrollBar->value()
-                                + ((factor - 1) * scrollBar->pageStep()/2)));
-    }
+    zoomInAct->setEnabled(scaleFactor < 10.0);
+    zoomOutAct->setEnabled(scaleFactor > 0.05);
+}
+
+void ImageViewer::adjustScrollBar(QScrollBar *scrollBar, double factor)
+{
+    scrollBar->setValue(int(factor * scrollBar->value()
+                            + ((factor - 1) * scrollBar->pageStep()/2)));
+}

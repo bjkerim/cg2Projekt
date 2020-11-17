@@ -83,6 +83,7 @@ class ImageViewer : public QMainWindow
      QPushButton* button1;
      QPushButton* button2;
      QPushButton* button3;
+     QPushButton* colorHistgoramButton;
      QPushButton* buttonMittlereHelligkeit;
      QPushButton* buttonVarianz;
      QPushButton* buttonContrast;
@@ -100,6 +101,7 @@ class ImageViewer : public QMainWindow
      QLabel* labelVarianz;
      QLabel* labelSliderTick;
      QLabel* meinHistogram;
+     QLabel* myHistogramColorLabel;
 
 
      // hier können weitere GUI Objekte hin wie Buttons Slider etc. 
@@ -121,6 +123,7 @@ class ImageViewer : public QMainWindow
      void createImageColor();
      void bitDynamikColor(int bits);
      void helligkeitColor(int helligkeitswert);
+     void histogramColor();
 
      // hier können weitere als SLOTS definierte Funktionen hin, die auf Knopfdruck etc. aufgerufen werden.
 
@@ -178,6 +181,8 @@ protected:
     QImage* imageCopy;
     QImage* imageGray;
     QImage* myHistogram;
+    QImage* myHistogramColor;
+     QImage* mirrorImage;
 
 
     std::fstream logFile;
