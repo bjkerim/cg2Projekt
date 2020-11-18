@@ -669,10 +669,10 @@ void ImageViewer::kontrastColor(int konstante) {
                 newYValue = ((y - mid) / std::abs(konstante)) + 0.5;
             }
 
-//            else if (konstante == 0) {
-//                imageLabel->setPixmap(QPixmap::fromImage(*imageCopy));
+            //            else if (konstante == 0) {
+            //                imageLabel->setPixmap(QPixmap::fromImage(*imageCopy));
 
-//            }
+            //            }
             newYValue = newYValue + mid;
 
             int newR = ((newYValue-16)*1.164) + ((cr-128)*1.596);
@@ -793,25 +793,118 @@ void ImageViewer::autoKontrast(int kontrastWert) {
 }
 
 
-//void ImageViewer::convertToYcbcr() {
-//    int yNew = 0;
-//    int h = image->height();
-//    int w = image->width();
-
-//    for (int i = 0; i <= w-1; i++){
-//        for(int j = 0; j <= h-1; j++ ){
-//            QRgb color = image->pixel(i,j);
-//            int y = ((qRed(color) *0.299) + (qGreen(color)* 0.587) + (qBlue(color)*0.114));
-//            int cb = 128+((qRed(color) * -0.169) + (qGreen(color)* -0.331) + (qBlue(color)*0.5));
-//            int cr = 128+((qRed(color) * 0.5) + (qGreen(color)* -0.419) + (qBlue(color)*-0.081));
-//        }
+/***********************************************************************************************************/
+void ImageViewer::autoKontrastColor(int kontrastWert) {
 
 
-//    }
+    *imageCopy = *image;
+    int w = image->width();
+    int h = image->height();
 
+    int neueHelligkeit = 0;
+    int aMin = 0;
+    int aMax = 255;
 
+    float kontrastProzent = kontrastWert/100.0;
+    int grenzeLow = kontrastProzent*(h*w);
+    int grenzeHigh = (1-kontrastProzent)*(h*w);
 
+    int aStrichLow = ((qRed(image->pixel(0,0)) *0.299) + (qGreen(image->pixel(0,0))* 0.587) + (qBlue(image->pixel(0,0))*0.114));
+    int aStrichHigh = ((qRed(image->pixel(0,0)) *0.299) + (qGreen(image->pixel(0,0))* 0.587) + (qBlue(image->pixel(0,0))*0.114));;
 
+    int histogram[256]= {0};
+    int kHistogram[256] = {0};
+
+    int aLow = 300;
+    int aHigh = 0;
+
+    /* Suche hellsten und dunkelsten Wert raus */
+    for (int i=0; i<w; i++){
+        for (int j=0; j<h; j++){
+            int tempPixelColor = (qRed(image->pixel(i,j)) *0.299) + (qGreen(image->pixel(i,j))* 0.587) + (qBlue(image->pixel(i,j))*0.114);
+            if ( tempPixelColor < aLow){
+                aLow = tempPixelColor;
+            }
+            else if (tempPixelColor > aHigh){
+                aHigh = tempPixelColor;
+            }
+        }
+    }
+
+    //    /* Create Array */
+    for (int i = 0; i<w ;i++) {
+        for (int j = 0; j<h; j++){
+            int myValue = ((qRed(image->pixel(i,j)) *0.299) + (qGreen(image->pixel(i,j))* 0.587) + (qBlue(image->pixel(i,j))*0.114));
+            histogram[myValue] += 1;
+        }
+    }
+
+    kHistogram[0] = histogram[0];
+    for(int i=1; i<256; i++){
+
+        kHistogram[i] = kHistogram[i-1] + histogram[i];
+    }
+
+    for (int i=0; i<256; i++){
+        if(kHistogram[i] >= grenzeLow && i<aStrichLow){
+            aStrichLow = i;
+        }
+
+        else if (kHistogram[i]<= grenzeHigh && i > aStrichHigh){
+            aStrichHigh = i;
+        }
+    }
+
+    for (int i=0; i<w; i++){
+        for (int j=0; j<h; j++){
+            QRgb color = image->pixel(i,j);
+            //int y = ((qRed(color) *0.299) + (qGreen(color)* 0.587) + (qBlue(color)*0.114));
+            int cb = 128+((qRed(color) * -0.169) + (qGreen(color)* -0.331) + (qBlue(color)*0.5));
+            int cr = 128+((qRed(color) * 0.5) + (qGreen(color)* -0.419) + (qBlue(color)*-0.081));
+
+            neueHelligkeit = (qRed(image->pixel(i,j)) *0.299) + (qGreen(image->pixel(i,j))* 0.587) + (qBlue(image->pixel(i,j))*0.114);
+
+            if (neueHelligkeit <= aStrichLow){
+                neueHelligkeit = aMin;
+            }
+
+            else if ( neueHelligkeit >= aStrichHigh ){
+                neueHelligkeit = aMax; }
+            else {
+                neueHelligkeit =  aMin + (neueHelligkeit - aStrichLow) * ((aMax-aMin)/(aStrichHigh-aStrichLow));
+
+            }
+
+            int newR = ((neueHelligkeit-16)*1.164) + ((cr-128)*1.596);
+            int newG = ((neueHelligkeit-16)*1.164) + ((cb-128)*(-0.392)) + ((cr-128)*(-0.813));
+            int newB =  ((neueHelligkeit-16)*1.164) + ((cb-128)*2.017);
+
+            if(newR > 255) {
+                newR = 255;
+            }
+            else if (newR < 0) {
+                newR = 0;
+            }
+            if(newG > 255) {
+                newG = 255;
+            }
+            else if (newG < 0) {
+                newG = 0;
+            }
+            if(newB > 255) {
+                newB = 255;
+            }
+            else if (newB < 0) {
+                newB = 0;
+            }
+
+            imageCopy->setPixel(i, j, qRgb(newR,newG,newB));
+        }
+
+    }
+    imageLabel->setPixmap(QPixmap::fromImage(*imageCopy));
+    renewLogging();
+}
 
 /****************************************************************************************
 *
@@ -945,6 +1038,14 @@ void ImageViewer::generateControlPanels()
     sliderKontrastColor->setToolTip("Kontrastslider Farbe");
     connect(sliderKontrastColor, SIGNAL(valueChanged(int)),this, SLOT(kontrastColor(int)));
 
+    QSlider *autoKontrastColorSlider = new QSlider(Qt::Horizontal,0);
+    autoKontrastColorSlider->setRange(1,100);
+    autoKontrastColorSlider->setTickPosition(QSlider::TicksBelow);
+    autoKontrastColorSlider->setTickInterval(1);
+    autoKontrastColorSlider->setToolTip("Autokontrastslider Farbe");
+    connect(autoKontrastColorSlider, SIGNAL(valueChanged(int)),this, SLOT(autoKontrastColor(int)));
+
+
 
     myHistogramColorLabel = new QLabel(this);
 
@@ -960,6 +1061,7 @@ void ImageViewer::generateControlPanels()
     m_option_layout3->addWidget(sliderKontrastColor);
     m_option_layout3->addWidget(myHistogramColorLabel);
     m_option_layout3->addWidget(colorHistgoramButton);
+    m_option_layout3->addWidget(autoKontrastColorSlider);
 
 
     tabWidget->addTab(m_option_panel3,"Aufgabenblatt 3");

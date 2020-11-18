@@ -97,6 +97,7 @@ class ImageViewer : public QMainWindow
      QSlider* kontrastSlider;
      QSlider* sliderKontrastColor;
      QSlider* sliderColorBit;
+     QSlider* autoKontrastColorSlider;
      QSpinBox* spinbox1;
      QLabel* labelMiddleBrightness;
      QLabel* labelVarianz;
@@ -126,6 +127,7 @@ class ImageViewer : public QMainWindow
      void bitDynamikColor(int bits);
      void helligkeitColor(int helligkeitswert);
      void histogramColor();
+     void autoKontrastColor(int kontrastWert);
 
      // hier können weitere als SLOTS definierte Funktionen hin, die auf Knopfdruck etc. aufgerufen werden.
 
