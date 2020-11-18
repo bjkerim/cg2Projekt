@@ -64,84 +64,94 @@ class ImageViewer : public QMainWindow
 {
     Q_OBJECT
 
- private:
+private:
 
-     // Beispiel für GUI Elemente
-     QWidget*	m_option_panel1;
-     QVBoxLayout*    m_option_layout1;
+    // Beispiel für GUI Elemente
+    QWidget*	m_option_panel1;
+    QVBoxLayout*    m_option_layout1;
 
-     QWidget*	m_option_panel2;
-     QVBoxLayout*    m_option_layout2;
+    QWidget*	m_option_panel2;
+    QVBoxLayout*    m_option_layout2;
 
-     QWidget*	m_option_panel3;
-     QVBoxLayout*    m_option_layout3;
+    QWidget*	m_option_panel3;
+    QVBoxLayout*    m_option_layout3;
 
-     QWidget* m_option_panel4;
-     QVBoxLayout* m_option_layout4;
-
-
-     QPushButton* button1;
-     QPushButton* button2;
-     QPushButton* button3;
-     QPushButton* colorHistgoramButton;
-     QPushButton* buttonMittlereHelligkeit;
-     QPushButton* buttonVarianz;
-     QPushButton* buttonContrast;
-     QPushButton* buttonGray;
-       QPushButton* buttonHistogram;
-     QSlider* sliderCross;
-     QSlider* slider2;
-     QSlider* sliderBright;
-     QSlider* sliderBit;
-     QSlider *sliderColorBrightness;
-     QSlider* kontrastSlider;
-     QSlider* sliderKontrastColor;
-     QSlider* sliderColorBit;
-     QSlider* autoKontrastColorSlider;
-     QSpinBox* spinbox1;
-     QLabel* labelMiddleBrightness;
-     QLabel* labelVarianz;
-     QLabel* labelSliderTick;
-     QLabel* meinHistogram;
-     QLabel* myHistogramColorLabel;
+    QWidget* m_option_panel4;
+    QVBoxLayout* m_option_layout4;
 
 
-     // hier können weitere GUI Objekte hin wie Buttons Slider etc. 
+    QPushButton* button1;
+    QPushButton* button2;
+    QPushButton* button3;
+    QPushButton* colorHistgoramButton;
+    QPushButton* buttonMittlereHelligkeit;
+    QPushButton* buttonVarianz;
+    QPushButton* buttonContrast;
+    QPushButton* buttonGray;
+    QPushButton* buttonHistogram;
+    QSlider* sliderCross;
+    QSlider* slider2;
+    QSlider* sliderBright;
+    QSlider* sliderBit;
+    QSlider *sliderColorBrightness;
+    QSlider* kontrastSlider;
+    QSlider* sliderKontrastColor;
+    QSlider* sliderColorBit;
+    QSlider* autoKontrastColorSlider;
+    QSpinBox* spinbox1;
+    QLabel* labelMiddleBrightness;
+    QLabel* labelVarianz;
+    QLabel* labelSliderTick;
+    QLabel* meinHistogram;
+    QLabel* myHistogramColorLabel;
+    QSlider* yLinearFilterSlider;
+    QSlider* xLinearFilterSlider;
+    QPushButton* buttonGenerateLinearFilterTable;
 
 
- private slots:
-
-     // Beispiel für einen Algorithmus
-     void applyCross(int kreuzBreite);
-     void convertToGrayscale();
-     void averageBrightness();
-     void varianz();
-     void histogram();
-     void helligkeit(int helligkeitswert);
-     void kontrast(int konstante);
-     void kontrastColor(int konstante);
-     void bitDynamik(int bits);
-     void autoKontrast(int kontrastWert);
-     void createImageBlackCopy();
-     void createImageColor();
-     void bitDynamikColor(int bits);
-     void helligkeitColor(int helligkeitswert);
-     void histogramColor();
-     void autoKontrastColor(int kontrastWert);
-
-     // hier können weitere als SLOTS definierte Funktionen hin, die auf Knopfdruck etc. aufgerufen werden.
+    // hier können weitere GUI Objekte hin wie Buttons Slider etc.
 
 
+private slots:
+
+    // Beispiel für einen Algorithmus
+    void applyCross(int kreuzBreite);
+    void convertToGrayscale();
+    void averageBrightness();
+    void varianz();
+    void histogram();
+    void helligkeit(int helligkeitswert);
+    void kontrast(int konstante);
+    void kontrastColor(int konstante);
+    void bitDynamik(int bits);
+    void autoKontrast(int kontrastWert);
+    void createImageBlackCopy();
+    void createImageColor();
+    void bitDynamikColor(int bits);
+    void helligkeitColor(int helligkeitswert);
+    void histogramColor();
+    void autoKontrastColor(int kontrastWert);
+    void generateFilterTable();
+    void setLinearXValue(int x);
+    void setLinearYValue(int y);
+    int getLinearXValue();
+    int getLinearYValue();
+    void linearFilter();
+
+
+    // hier können weitere als SLOTS definierte Funktionen hin, die auf Knopfdruck etc. aufgerufen werden.
 
 
 
-     void open();
-     void print();
-     void zoomIn();
-     void zoomOut();
-     void normalSize();
-     void fitToWindow();
-     void about();
+
+
+    void open();
+    void print();
+    void zoomIn();
+    void zoomOut();
+    void normalSize();
+    void fitToWindow();
+    void about();
 
 
 
@@ -149,15 +159,15 @@ class ImageViewer : public QMainWindow
 
 
 public:
-     ImageViewer();
-     bool loadFile(const QString &);
-     void updateImageDisplay();
+    ImageViewer();
+    bool loadFile(const QString &);
+    void updateImageDisplay();
 
 protected:
 
     void resizeEvent(QResizeEvent * event);
 
- private:
+private:
 
     // in diesen Beiden Methoden sind Änderungen nötig bzw. sie dienen als
     // Vorlage für eigene Methoden.
@@ -166,7 +176,7 @@ protected:
 
     // Ab hier technische Details die nicht für das Verständnis notwendig sind.
     void startLogging();
-    void generateMainGui(); 
+    void generateMainGui();
     
     void createActions();
     void createMenus();
@@ -186,7 +196,7 @@ protected:
     QImage* imageGray;
     QImage* myHistogram;
     QImage* myHistogramColor;
-     QImage* mirrorImage;
+    QImage* mirrorImage;
 
 
     std::fstream logFile;

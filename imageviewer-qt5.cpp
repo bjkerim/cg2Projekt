@@ -43,9 +43,10 @@
 #include <QPrintDialog>
 #endif
 #include<iostream>
-
-
 #include "imageviewer-qt5.h"
+
+int xLinearFilterValue;
+int yLinearFilterValue;
 
 ImageViewer::ImageViewer()
 {
@@ -67,6 +68,22 @@ ImageViewer::ImageViewer()
 
 }
 
+
+void ImageViewer::setLinearXValue(int x){
+    xLinearFilterValue = x;
+}
+
+void ImageViewer::setLinearYValue(int y){
+    yLinearFilterValue = y;
+}
+
+int ImageViewer::getLinearXValue(){
+    return xLinearFilterValue;
+}
+
+int ImageViewer::getLinearYValue(){
+    return yLinearFilterValue;
+}
 
 void ImageViewer::createImageColor() {
 
@@ -348,9 +365,6 @@ void ImageViewer::histogram() {
 
 /************************************************/
 
-
-
-
 void ImageViewer::histogramColor() {
     *imageCopy = *image;
 
@@ -434,7 +448,7 @@ void ImageViewer::histogramColor() {
             }
 
             else {
-            myHistogramColor->setPixelColor(z,h, Qt::green);
+                myHistogramColor->setPixelColor(z,h, Qt::green);
             }
         }
     }
@@ -456,7 +470,7 @@ void ImageViewer::histogramColor() {
             }
 
             else{
-            myHistogramColor->setPixelColor(z,h, Qt::blue);
+                myHistogramColor->setPixelColor(z,h, Qt::blue);
             }
 
 
@@ -921,8 +935,58 @@ void ImageViewer::autoKontrastColor(int kontrastWert) {
 *
 *****************************************************************************************/
 
+void ImageViewer::generateFilterTable(){
+    int x = getLinearXValue();
+    int y = getLinearXValue();
+
+    QTableWidget *linearFilterTable = new QTableWidget(this);
+    linearFilterTable->setRowCount(x);
+    linearFilterTable->setColumnCount(y);
+
+    m_option_layout3->addWidget(linearFilterTable);
+
+}
+
+void ImageViewer::linearFilter(){
+
+    //    Konvertiere alles in YCBCR WIE IMMER;
+
+    //    *imageCopy = image;
+    //    int [][] filter = {
+    //    (2D filterarray erzeugen mit den gewichtungen als 0 und 1)
+    //    }
+    //    int filterkoeff = 0;
+    //   for(iteriere durchs filterarray){
+    //    if(objekt an stelle x,y == 1)
+    //     erhöhre filterkoeff um 1 }
+
+    //    double sEInzelGewichtung = 1.0/filterkoeff;
+
+    //    ing K = filter[0].length/2;
+    //    int L = filter.length/2;
+
+    //    ImageProcessor copy  = orig.duplicate();
+
+    //    for (int vl = L; v < N-L-1; v++){
+    //       for (int j = -L; j<= L, j++){
+    //      compute filler result for position (u,v)
+    //            int sum =0;
+    //            for (int j=-L; j<=L; j++){
+    //                for(int i = -K, i<=K;i++){
+    //                    int p= copy.getPIxel(u+i, v+j);
+    //                    int c= filter[j+L][i+K];
+    //                    sum = sum + c*p;
+    //                }
+    //            }
+    //            int q = (int) Math.round(s*sum);
+    //            if (q < 0) q=0;
+    //            if(q> 255) q=255;
+    //            orig.putPixel(u,v, q);
+    //}
+    //    }
 
 
+}
 
 void ImageViewer::generateControlPanels()
 {
@@ -1052,6 +1116,25 @@ void ImageViewer::generateControlPanels()
     autoKontrastColorSlider->setToolTip("Autokontrastslider Farbe");
     connect(autoKontrastColorSlider, SIGNAL(valueChanged(int)),this, SLOT(autoKontrastColor(int)));
 
+    QSlider *xLinearFilterSlider = new QSlider(Qt::Horizontal,0);
+    xLinearFilterSlider->setRange(1,15);
+    xLinearFilterSlider->setTickPosition(QSlider::TicksBelow);
+    xLinearFilterSlider->setTickInterval(1);
+    xLinearFilterSlider->setToolTip("X-Achse Linearer Filter");
+    connect(xLinearFilterSlider, SIGNAL(valueChanged(int)),this, SLOT(setLinearXValue(int)));
+
+    QSlider *yLinearFilterSlider = new QSlider(Qt::Horizontal,0);
+    yLinearFilterSlider->setRange(1,15);
+    yLinearFilterSlider->setTickPosition(QSlider::TicksBelow);
+    yLinearFilterSlider->setTickInterval(1);
+    yLinearFilterSlider->setToolTip("Y-Achse Linearer Filter");
+    connect(yLinearFilterSlider, SIGNAL(valueChanged(int)),this, SLOT(setLinearYValue(int)));
+
+    buttonGenerateLinearFilterTable = new QPushButton();
+    buttonGenerateLinearFilterTable->setText("Generiere Tabelle");
+    QObject::connect(buttonGenerateLinearFilterTable, SIGNAL (clicked()), this, SLOT (generateFilterTable()));
+
+
 
 
     myHistogramColorLabel = new QLabel(this);
@@ -1069,6 +1152,11 @@ void ImageViewer::generateControlPanels()
     m_option_layout3->addWidget(myHistogramColorLabel);
     m_option_layout3->addWidget(colorHistgoramButton);
     m_option_layout3->addWidget(autoKontrastColorSlider);
+    m_option_layout3->addWidget(xLinearFilterSlider);
+    m_option_layout3->addWidget(yLinearFilterSlider);
+    m_option_layout3->addWidget(buttonGenerateLinearFilterTable);
+
+
 
 
     tabWidget->addTab(m_option_panel3,"Aufgabenblatt 3");
