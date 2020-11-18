@@ -428,31 +428,38 @@ void ImageViewer::histogramColor() {
 
     for (int z = 0; z<256; z++){
         for (int h=0; h<(endWertGreen[z]); h++){
-            if(QRgb(myHistogramColor->pixel(z,h)) == Qt::red){
+            //rot abfragen wenn mit grün gepainted wird
+            if(qRed(myHistogramColor->pixel(z,h)) == 255 ){
                 myHistogramColor->setPixelColor(z,h, Qt::yellow);
             }
 
+            else {
             myHistogramColor->setPixelColor(z,h, Qt::green);
+            }
         }
     }
 
     for (int z = 0; z<256; z++){
         for (int h=0; h<(endWertBlue[z]); h++){
-            if(QRgb(myHistogramColor->pixel(z,h)) == Qt::red){
+
+            if((qRed(myHistogramColor->pixel(z,h)) == 255) && (qGreen(myHistogramColor->pixel(z,h)) == 0)){ //rot prüfen und magenta overpainten
                 myHistogramColor->setPixelColor(z,h, Qt::magenta);
             }
 
-            else if(QRgb(myHistogramColor->pixel(z,h)) == Qt::green){
+            else if((qRed(myHistogramColor->pixel(z,h)) == 0) && (qGreen(myHistogramColor->pixel(z,h)) == 255)){ //grün prüfen und cyan drüberballern
                 myHistogramColor->setPixelColor(z,h, Qt::cyan);
 
             }
-            else if(QRgb(myHistogramColor->pixel(z,h)) ==Qt::yellow){
+            else if((qRed(myHistogramColor->pixel(z,h)) == 255) && (qGreen(myHistogramColor->pixel(z,h)) == 255)){
                 myHistogramColor->setPixelColor(z,h, Qt::gray);
 
             }
 
-
+            else{
             myHistogramColor->setPixelColor(z,h, Qt::blue);
+            }
+
+
         }
     }
 
