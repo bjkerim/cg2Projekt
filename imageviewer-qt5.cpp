@@ -943,61 +943,94 @@ void ImageViewer::generateFilterTable(){
     linearFilterTable->setRowCount(x);
     linearFilterTable->setColumnCount(y);
 
-
 }
+
 
 void ImageViewer::linearFilter(){
 
+    *imageCopy = *image;
+    int filterKoeffSum = 0;
+    int filterArrayWidth = xLinearFilterValue;
+    int filterArrayHeight = yLinearFilterValue;
 
+    //erstelle 2D int array um unsere gewichtungen einzutragen
+    //int filterArray[filterArrayWidth][filterArrayHeight];
 
-    //    Konvertiere alles in YCBCR WIE IMMER;
-
-
-    int tableWidth = linearFilterTable->columnCount();
-    int tableHeight = linearFilterTable->rowCount();
-
-    int coefficientSum = 0;
-
-    for(int i=0; i< tableWidth; i++){
-        for (int j=0; j<tableHeight; j++){
-            coefficientSum += linearFilterTable->item(j,i)->text().toInt();
+    ////füllen das array mit den werten aus der tabelle aus der gui
+    for(int i = 0; i < filterArrayWidth; ++i){
+        for(int j = 0; j < filterArrayHeight; ++j){
+            filterKoeffSum += linearFilterTable->item(j, i)->text().toInt();
         }
     }
 
-    logFile << "CoefficientSum" <<  coefficientSum << std::endl;
-    renewLogging();
+    double sEinzelGewichtung = 1.0/filterKoeffSum;
 
-    //    int [][] filter = {
-    //    (2D filterarray erzeugen mit den gewichtungen als 0 und 1)
-    //    }
+    int L_Hotspotx = filterArrayWidth/2;
+    int K_Hotspoty = filterArrayHeight/2;
 
-    //    double sEInzelGewichtung = 1.0/filterkoeff;
+    for (int v = L_Hotspotx; v < (image->width()-(L_Hotspotx-1)); v++){ //Lässt den Rand frei
+        for (int u = K_Hotspoty; u < (image->height()-( K_Hotspoty-1)); u++){
 
-    //    ing K = filter[0].length/2;
-    //    int L = filter.length/2;
+            int sumRed = 0;
+            int sumGreen = 0;
+            int sumBlue = 0;
 
-    //    ImageProcessor copy  = orig.duplicate();
 
-    //    for (int vl = L; v < N-L-1; v++){
-    //       for (int j = -L; j<= L, j++){
-    //      compute filler result for position (u,v)
-    //            int sum =0;
-    //            for (int j=-L; j<=L; j++){
-    //                for(int i = -K, i<=K;i++){
-    //                    int p= copy.getPIxel(u+i, v+j);
-    //                    int c= filter[j+L][i+K];
-    //                    sum = sum + c*p;
-    //                }
-    //            }
-    //            int q = (int) Math.round(s*sum);
-    //            if (q < 0) q=0;
-    //            if(q> 255) q=255;
-    //            orig.putPixel(u,v, q);
-    //}
-    //    }
+            for (int j=((-1)*(L_Hotspotx)); j <= L_Hotspotx; j++){
+                for(int i = ((-1)*(K_Hotspoty)); i <= K_Hotspoty ; i++){
 
+                    int pRed = qRed(image->pixel(u+i, v+j));
+                    int pGreen = qGreen(image->pixel(u+i, v+j));
+                    int pBlue = qBlue(image->pixel(u+i, v+j));
+
+                    int c = linearFilterTable->item((j+L_Hotspotx),(i+K_Hotspoty))->text().toInt();
+
+                    sumRed += c * pRed;
+                    sumGreen += c * pGreen;
+                    sumBlue += c * pBlue;
+
+
+                }
+            }
+            int newRed = (sEinzelGewichtung * sumRed) +0.5;
+            int newGreen = (sEinzelGewichtung * sumGreen) +0.5;
+            int newBlue = (sEinzelGewichtung * sumBlue) +0.5;
+
+
+            if (newRed < 0){
+                newRed = 0;
+            }
+
+            if (newGreen < 0){
+                newGreen = 0;
+            }
+
+            if (newBlue < 0){
+                newBlue = 0;
+            }
+
+            if (newRed > 255){
+                newRed = 255;
+            }
+
+            if (newGreen > 255){
+                newGreen = 255;
+            }
+
+            if (newBlue > 255){
+                newBlue = 255;
+            }
+
+            QRgb color = qRgb(newRed, newGreen, newBlue);
+            imageCopy->setPixel(u,v,color);
+        }
+
+    }
+    imageLabel->setPixmap(QPixmap::fromImage(*imageCopy));
 
 }
+
+
 
 void ImageViewer::generateControlPanels()
 {
@@ -1159,7 +1192,7 @@ void ImageViewer::generateControlPanels()
     QObject::connect(colorHistgoramButton, SIGNAL (clicked()), this, SLOT (histogramColor()));
 
     linearFilterButton = new QPushButton();
-    linearFilterButton->setText("colorHistgoramButton");
+    linearFilterButton->setText("linearFilterButton");
     QObject::connect(linearFilterButton, SIGNAL (clicked()), this, SLOT (linearFilter()));
 
 
