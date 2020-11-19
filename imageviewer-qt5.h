@@ -59,6 +59,7 @@ class QTabWidget;
 class QPushButton;
 class QSpinBox;
 class QSlider;
+class QTableWidget;
 
 class ImageViewer : public QMainWindow
 {
@@ -89,6 +90,7 @@ private:
     QPushButton* buttonContrast;
     QPushButton* buttonGray;
     QPushButton* buttonHistogram;
+    QPushButton* linearFilterButton;
     QSlider* sliderCross;
     QSlider* slider2;
     QSlider* sliderBright;
@@ -107,6 +109,7 @@ private:
     QSlider* yLinearFilterSlider;
     QSlider* xLinearFilterSlider;
     QPushButton* buttonGenerateLinearFilterTable;
+    QTableWidget* linearFilterTable;
 
 
     // hier können weitere GUI Objekte hin wie Buttons Slider etc.
