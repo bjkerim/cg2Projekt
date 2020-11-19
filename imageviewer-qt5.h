@@ -140,6 +140,10 @@ private slots:
     int getLinearXValue();
     int getLinearYValue();
     void linearFilter();
+    int convertYcbcrToRgb(int y, int cb, int cr);
+    int * convertToYcbcr(QRgb color);
+    int getYfromRGB(int color);
+
 
 
     // hier können weitere als SLOTS definierte Funktionen hin, die auf Knopfdruck etc. aufgerufen werden.

@@ -68,6 +68,51 @@ ImageViewer::ImageViewer()
 
 }
 
+int ImageViewer::getYfromRGB(int color){
+    int y = ((qRed(color)* 0.299) + (qGreen(color)* 0.587) + (qBlue(color)*0.114));
+    return y;
+}
+
+int * ImageViewer::convertToYcbcr(QRgb color){
+
+            int y = ((qRed(color)* 0.299) + (qGreen(color)* 0.587) + (qBlue(color)*0.114));
+            int cb = 128+((qRed(color) * -0.169) + (qGreen(color)* -0.331) + (qBlue(color)*0.5));
+            int cr = 128+((qRed(color) * 0.5) + (qGreen(color)* -0.419) + (qBlue(color)*-0.081));
+
+    int myArray[3] = {y,cb,cr};
+
+    return myArray;
+
+}
+int ImageViewer::convertYcbcrToRgb(int y, int cb, int cr){
+
+    int newR = (((y-16)*1.164) + ((cr-128)*1.596));
+    int newG = (((y-16)*1.164) + ((cb-128)*(-0.392)) + ((cr-128)*(-0.813)));
+    int newB = (((y-16)*1.164) + ((cb-128)*2.017));
+
+    if(newR > 255) {
+        newR = 255;
+    }
+    else if (newR < 0) {
+        newR = 0;
+    }
+    if(newG > 255) {
+        newG = 255;
+    }
+    else if (newG < 0) {
+        newG = 0;
+    }
+    if(newB > 255) {
+        newB = 255;
+    }
+    else if (newB < 0) {
+        newB = 0;
+    }
+
+    int newColor = qRgb(newR,newG,newB);
+
+    return newColor;
+}
 
 void ImageViewer::setLinearXValue(int x){
     xLinearFilterValue = x;
@@ -949,14 +994,14 @@ void ImageViewer::generateFilterTable(){
 void ImageViewer::linearFilter(){
 
     *imageCopy = *image;
+
     int filterKoeffSum = 0;
-    int filterArrayWidth = xLinearFilterValue;
-    int filterArrayHeight = yLinearFilterValue;
+    int filterArrayWidth = getLinearXValue();
+    int filterArrayHeight = getLinearYValue();
 
     //erstelle 2D int array um unsere gewichtungen einzutragen
     //int filterArray[filterArrayWidth][filterArrayHeight];
 
-    ////füllen das array mit den werten aus der tabelle aus der gui
     for(int i = 0; i < filterArrayWidth; ++i){
         for(int j = 0; j < filterArrayHeight; ++j){
             filterKoeffSum += linearFilterTable->item(j, i)->text().toInt();
@@ -965,64 +1010,36 @@ void ImageViewer::linearFilter(){
 
     double sEinzelGewichtung = 1.0/filterKoeffSum;
 
-    int L_Hotspotx = filterArrayWidth/2;
-    int K_Hotspoty = filterArrayHeight/2;
+    //schritte um den hotspot-pixel herum
+    int LHotspotY = filterArrayHeight/2;
+    int KHotspotx = filterArrayWidth/2;
 
-    for (int v = L_Hotspotx; v < (image->width()-(L_Hotspotx-1)); v++){ //Lässt den Rand frei
-        for (int u = K_Hotspoty; u < (image->height()-( K_Hotspoty-1)); u++){
+    for (int v = LHotspotY; v <= (image->height() - LHotspotY - 1); v++){ //Lässt den Rand frei
+        for (int u = KHotspotx; u <= (image->width() - KHotspotx -1); u++){
+            //int yTemp = 0;
+            int cbTemp = 128+((qRed(image->pixel(v,u)) * -0.169) + (qGreen(image->pixel(v,u))* -0.331) + (qBlue(image->pixel(v,u))*0.5));
+            int crTemp = 128+((qRed(image->pixel(v,u)) * 0.5) + (qGreen(image->pixel(v,u))* -0.419) + (qBlue(image->pixel(v,u))*-0.081));
 
-            int sumRed = 0;
-            int sumGreen = 0;
-            int sumBlue = 0;
 
+            int sum = 0;
+// j für schritte entlang der y achse, i für schritte entlang der x achse
 
-            for (int j=((-1)*(L_Hotspotx)); j <= L_Hotspotx; j++){
-                for(int i = ((-1)*(K_Hotspoty)); i <= K_Hotspoty ; i++){
+            for (int j= (-LHotspotY); j <= LHotspotY; j++){
+                for(int i =(-KHotspotx); i <= KHotspotx ; i++){
 
-                    int pRed = qRed(image->pixel(u+i, v+j));
-                    int pGreen = qGreen(image->pixel(u+i, v+j));
-                    int pBlue = qBlue(image->pixel(u+i, v+j));
+                    int yTemp = getYfromRGB(image->pixel(v+i, u+j));
+                    int c = linearFilterTable->item((j + LHotspotY),(i + KHotspotx))->text().toInt();
 
-                    int c = linearFilterTable->item((j+L_Hotspotx),(i+K_Hotspoty))->text().toInt();
-
-                    sumRed += c * pRed;
-                    sumGreen += c * pGreen;
-                    sumBlue += c * pBlue;
-
+                    sum += c * yTemp;
 
                 }
             }
-            int newRed = (sEinzelGewichtung * sumRed) +0.5;
-            int newGreen = (sEinzelGewichtung * sumGreen) +0.5;
-            int newBlue = (sEinzelGewichtung * sumBlue) +0.5;
+            int newY = (int) ((sEinzelGewichtung* sum) + 0.5);
 
 
-            if (newRed < 0){
-                newRed = 0;
-            }
+            QRgb color = convertYcbcrToRgb(newY, cbTemp, crTemp);
 
-            if (newGreen < 0){
-                newGreen = 0;
-            }
-
-            if (newBlue < 0){
-                newBlue = 0;
-            }
-
-            if (newRed > 255){
-                newRed = 255;
-            }
-
-            if (newGreen > 255){
-                newGreen = 255;
-            }
-
-            if (newBlue > 255){
-                newBlue = 255;
-            }
-
-            QRgb color = qRgb(newRed, newGreen, newBlue);
-            imageCopy->setPixel(u,v,color);
+            imageCopy->setPixel(v, u, color);
         }
 
     }
