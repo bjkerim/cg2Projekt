@@ -75,9 +75,9 @@ int ImageViewer::getYfromRGB(int color){
 
 int * ImageViewer::convertToYcbcr(QRgb color){
 
-            int y = ((qRed(color)* 0.299) + (qGreen(color)* 0.587) + (qBlue(color)*0.114));
-            int cb = 128+((qRed(color) * -0.169) + (qGreen(color)* -0.331) + (qBlue(color)*0.5));
-            int cr = 128+((qRed(color) * 0.5) + (qGreen(color)* -0.419) + (qBlue(color)*-0.081));
+    int y = ((qRed(color)* 0.299) + (qGreen(color)* 0.587) + (qBlue(color)*0.114));
+    int cb = 128+((qRed(color) * -0.169) + (qGreen(color)* -0.331) + (qBlue(color)*0.5));
+    int cr = 128+((qRed(color) * 0.5) + (qGreen(color)* -0.419) + (qBlue(color)*-0.081));
 
     int myArray[3] = {y,cb,cr};
 
@@ -329,7 +329,7 @@ void ImageViewer::bitDynamikColor(int bits){
 
                 int newR = ((yNew-16)*1.164) + ((cr-128)*1.596);
                 int newG = ((yNew-16)*1.164) + ((cb-128)*(-0.392)) + ((cr-128)*(-0.813));
-                int newB =  ((yNew-16)*1.164) + ((cb-128)*2.017);
+                int newB = ((yNew-16)*1.164) + ((cb-128)*2.017);
 
                 if(newR > 255) {
                     newR = 255;
@@ -1022,7 +1022,7 @@ void ImageViewer::linearFilter(){
 
 
             int sum = 0;
-// j für schritte entlang der y achse, i für schritte entlang der x achse
+            // j für schritte entlang der y achse, i für schritte entlang der x achse
 
             for (int j= (-LHotspotY); j <= LHotspotY; j++){
                 for(int i =(-KHotspotx); i <= KHotspotx ; i++){
@@ -1047,6 +1047,73 @@ void ImageViewer::linearFilter(){
 
 }
 
+void ImageViewer::linearFilterZeroPadding(){
+
+    *imageCopy = *image;
+
+    int filterKoeffSum = 0;
+    int filterArrayWidth = getLinearXValue();
+    int filterArrayHeight = getLinearYValue();
+
+    //erstelle 2D int array um unsere gewichtungen einzutragen
+    //int filterArray[filterArrayWidth][filterArrayHeight];
+
+    for(int i = 0; i < filterArrayWidth; ++i){
+        for(int j = 0; j < filterArrayHeight; ++j){
+            filterKoeffSum += linearFilterTable->item(j, i)->text().toInt();
+        }
+    }
+
+    double sEinzelGewichtung = 1.0/filterKoeffSum;
+
+    //schritte um den hotspot-pixel herum
+    int LHotspotY = filterArrayHeight/2;
+    int KHotspotx = filterArrayWidth/2;
+
+    for (int v = 0; v <= image->height(); v++){ //Lässt den Rand frei
+        for (int u = 0; u <= image->width(); u++){
+
+            int cbTemp = 128+((qRed(image->pixel(v,u)) * -0.169) + (qGreen(image->pixel(v,u))* -0.331) + (qBlue(image->pixel(v,u))*0.5));
+            int crTemp = 128+((qRed(image->pixel(v,u)) * 0.5) + (qGreen(image->pixel(v,u))* -0.419) + (qBlue(image->pixel(v,u))*-0.081));
+
+
+            int sum = 0;
+            // j für schritte entlang der y achse, i für schritte entlang der x achse
+            //mini matrix um den Hotspot herum
+            for (int j= (-LHotspotY); j <= LHotspotY; j++){
+                for(int i =(-KHotspotx); i <= KHotspotx ; i++){
+                    int yTemp = 0;
+                    int debugTest1 = (v+j-LHotspotY);
+                    int debugTest2 = (v+j-LHotspotY);
+                    int debugTest3 = (u+i-KHotspotx);
+                    int debugTest4 = (u+i-KHotspotx);
+
+
+                    if((v+j-LHotspotY) < 0 || image->height()-1 < (v+j-LHotspotY) || (u+i-KHotspotx) < 0 || image->width()-1 >(u+i-KHotspotx)){
+                         yTemp = getYfromRGB(127);
+
+                    }else{
+                         yTemp = getYfromRGB(image->pixel(v+i, u+j));
+
+                    }
+
+
+                    int c = linearFilterTable->item((j + LHotspotY),(i + KHotspotx))->text().toInt();
+
+                    sum += c * yTemp;
+
+                }
+            }
+            int newY = (int) ((sEinzelGewichtung* sum) + 0.5);
+
+
+            QRgb color = convertYcbcrToRgb(newY, cbTemp, crTemp);
+
+            imageCopy->setPixel(v, u, color);
+        }
+    }
+    imageLabel->setPixmap(QPixmap::fromImage(*imageCopy));
+}
 
 
 void ImageViewer::generateControlPanels()
@@ -1198,7 +1265,7 @@ void ImageViewer::generateControlPanels()
     QObject::connect(buttonGenerateLinearFilterTable, SIGNAL (clicked()), this, SLOT (generateFilterTable()));
 
     linearFilterTable = new QTableWidget();
-    linearFilterTable = new QTableWidget(3,3,this);
+    linearFilterTable = new QTableWidget(0,0,this);
 
 
     myHistogramColorLabel = new QLabel(this);
@@ -1211,6 +1278,11 @@ void ImageViewer::generateControlPanels()
     linearFilterButton = new QPushButton();
     linearFilterButton->setText("linearFilterButton");
     QObject::connect(linearFilterButton, SIGNAL (clicked()), this, SLOT (linearFilter()));
+
+    linearFilterZeroButton = new QPushButton();
+    linearFilterZeroButton->setText("linearFilterZeroButton");
+    QObject::connect(linearFilterZeroButton, SIGNAL (clicked()), this, SLOT (linearFilterZeroPadding()));
+
 
 
 
@@ -1225,6 +1297,7 @@ void ImageViewer::generateControlPanels()
     m_option_layout3->addWidget(buttonGenerateLinearFilterTable);
     m_option_layout3->addWidget(linearFilterTable);
     m_option_layout3->addWidget(linearFilterButton);
+    m_option_layout3->addWidget(linearFilterZeroButton);
 
 
     tabWidget->addTab(m_option_panel3,"Aufgabenblatt 3");
