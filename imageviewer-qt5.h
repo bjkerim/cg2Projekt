@@ -111,6 +111,7 @@ private:
     QPushButton* buttonGenerateLinearFilterTable;
     QTableWidget* linearFilterTable;
     QPushButton* linearFilterZeroButton;
+    QPushButton* linearFilterKonstButton;
 
 
     // hier können weitere GUI Objekte hin wie Buttons Slider etc.
@@ -145,6 +146,7 @@ private slots:
     int * convertToYcbcr(QRgb color);
     int getYfromRGB(int color);
     void linearFilterZeroPadding();
+    void linearFilterKonstPadding();
 
 
 

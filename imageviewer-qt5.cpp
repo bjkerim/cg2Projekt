@@ -1070,8 +1070,8 @@ void ImageViewer::linearFilterZeroPadding(){
     int LHotspotY = filterArrayHeight/2;
     int KHotspotx = filterArrayWidth/2;
 
-    for (int v = 0; v <= image->height(); v++){ //Lässt den Rand frei
-        for (int u = 0; u <= image->width(); u++){
+    for (int v = 0; v < image->height(); v++){ //Lässt den Rand frei
+        for (int u = 0; u < image->width(); u++){
 
             int cbTemp = 128+((qRed(image->pixel(v,u)) * -0.169) + (qGreen(image->pixel(v,u))* -0.331) + (qBlue(image->pixel(v,u))*0.5));
             int crTemp = 128+((qRed(image->pixel(v,u)) * 0.5) + (qGreen(image->pixel(v,u))* -0.419) + (qBlue(image->pixel(v,u))*-0.081));
@@ -1080,20 +1080,19 @@ void ImageViewer::linearFilterZeroPadding(){
             int sum = 0;
             // j für schritte entlang der y achse, i für schritte entlang der x achse
             //mini matrix um den Hotspot herum
-            for (int j= (-LHotspotY); j <= LHotspotY; j++){
-                for(int i =(-KHotspotx); i <= KHotspotx ; i++){
+
+            for (int j = (-LHotspotY); j <= LHotspotY; j++){
+                for(int i = (-KHotspotx); i <= KHotspotx ; i++){
                     int yTemp = 0;
-                    int debugTest1 = (v+j-LHotspotY);
-                    int debugTest2 = (v+j-LHotspotY);
-                    int debugTest3 = (u+i-KHotspotx);
-                    int debugTest4 = (u+i-KHotspotx);
 
 
-                    if((v+j-LHotspotY) < 0 || image->height()-1 < (v+j-LHotspotY) || (u+i-KHotspotx) < 0 || image->width()-1 >(u+i-KHotspotx)){
-                         yTemp = getYfromRGB(127);
+                    if((v+j -LHotspotY) < 0 || (v+j -LHotspotY) > (image->height()-1)  || (u+i-KHotspotx) < 0 || (u+i-KHotspotx) > (image->width()-1)) {
 
-                    }else{
-                         yTemp = getYfromRGB(image->pixel(v+i, u+j));
+                        yTemp = getYfromRGB(127);
+                    }
+
+                    else{
+                        yTemp = getYfromRGB(image->pixel(v+i, u+j));
 
                     }
 
@@ -1113,6 +1112,94 @@ void ImageViewer::linearFilterZeroPadding(){
         }
     }
     imageLabel->setPixmap(QPixmap::fromImage(*imageCopy));
+}
+
+void ImageViewer::linearFilterKonstPadding(){
+
+    *imageCopy = *image;
+
+    int filterKoeffSum = 0;
+    int filterArrayWidth = getLinearXValue();
+    int filterArrayHeight = getLinearYValue();
+
+    //erstelle 2D int array um unsere gewichtungen einzutragen
+    //int filterArray[filterArrayWidth][filterArrayHeight];
+
+    for(int i = 0; i < filterArrayWidth; ++i){
+        for(int j = 0; j < filterArrayHeight; ++j){
+            filterKoeffSum += linearFilterTable->item(j, i)->text().toInt();
+        }
+    }
+
+    double sEinzelGewichtung = 1.0/filterKoeffSum;
+
+    //schritte um den hotspot-pixel herum
+    int LHotspotY = filterArrayHeight/2;
+    int KHotspotx = filterArrayWidth/2;
+
+    for (int v = 0; v < image->height(); v++){ //Lässt den Rand frei
+        for (int u = 0; u < image->width(); u++){
+
+            int cbTemp = 128+((qRed(image->pixel(v,u)) * -0.169) + (qGreen(image->pixel(v,u))* -0.331) + (qBlue(image->pixel(v,u))*0.5));
+            int crTemp = 128+((qRed(image->pixel(v,u)) * 0.5) + (qGreen(image->pixel(v,u))* -0.419) + (qBlue(image->pixel(v,u))*-0.081));
+
+
+            int sum = 0;
+            // j für schritte entlang der y achse, i für schritte entlang der x achse
+            //mini matrix um den Hotspot herum
+
+            for (int j = (-LHotspotY); j <= LHotspotY; j++){
+                for(int i = (-KHotspotx); i <= KHotspotx ; i++){
+                    int yTemp = 0;
+
+
+                    if((v+j -LHotspotY) < 0 || (v+j -LHotspotY) > (image->height()-1)  || (u+i-KHotspotx) < 0 || (u+i-KHotspotx) > (image->width()-1)) {
+
+                        yTemp = getYfromRGB(image->pixel(v,u));
+                    }
+
+                    else{
+                        yTemp = getYfromRGB(image->pixel(v+i, u+j));
+
+                    }
+
+
+                    int c = linearFilterTable->item((j + LHotspotY),(i + KHotspotx))->text().toInt();
+
+                    sum += c * yTemp;
+
+                }
+            }
+            int newY = (int) ((sEinzelGewichtung* sum) + 0.5);
+
+
+            QRgb color = convertYcbcrToRgb(newY, cbTemp, crTemp);
+
+            imageCopy->setPixel(v, u, color);
+        }
+    }
+    imageLabel->setPixmap(QPixmap::fromImage(*imageCopy));
+}
+
+void ImageViewer::DoubleDGauss(){
+    //beliebige werte von sgima, bei breiterer glocke mehr samplingwerte notwendig um den verlauf wiederzugeben
+    //diskreter gaußfilter minimale ausdehung von - oder + 3 sigma
+
+/*pseudocode
+ * float[] makeGaussKernel1d(double sigma){
+ * //create the kernel h:
+ * int center = (int) (3.0 * sigma);
+ * float[] h = new float[2* center+1]; //odd size weil
+ * //fill the kernel h:
+ * double sigma2 = sigma *sigma; //sigma²
+ * for (int i = 0; i < h.length; i++){ //setzt die index werte in die gauss funktion ein, index verschiebt sich dass mitte des arrays auf null ist. sigma quadrat unverändert über alle schleifen
+ * double r = center -i;
+ * h[i] = (float) Math.exp(-0.5 * (r*r) / sigma2);
+ * }
+ * return h;
+ * }
+ *
+
 }
 
 
@@ -1258,8 +1345,6 @@ void ImageViewer::generateControlPanels()
     yLinearFilterSlider->setToolTip("Y-Achse Linearer Filter");
     connect(yLinearFilterSlider, SIGNAL(valueChanged(int)),this, SLOT(setLinearYValue(int)));
 
-
-
     buttonGenerateLinearFilterTable = new QPushButton();
     buttonGenerateLinearFilterTable->setText("Generiere Tabelle");
     QObject::connect(buttonGenerateLinearFilterTable, SIGNAL (clicked()), this, SLOT (generateFilterTable()));
@@ -1283,6 +1368,10 @@ void ImageViewer::generateControlPanels()
     linearFilterZeroButton->setText("linearFilterZeroButton");
     QObject::connect(linearFilterZeroButton, SIGNAL (clicked()), this, SLOT (linearFilterZeroPadding()));
 
+    linearFilterKonstButton = new QPushButton();
+    linearFilterKonstButton->setText("linearFilterKonstButton");
+    QObject::connect(linearFilterKonstButton, SIGNAL (clicked()), this, SLOT (linearFilterKonstPadding()));
+
 
 
 
@@ -1298,6 +1387,8 @@ void ImageViewer::generateControlPanels()
     m_option_layout3->addWidget(linearFilterTable);
     m_option_layout3->addWidget(linearFilterButton);
     m_option_layout3->addWidget(linearFilterZeroButton);
+    m_option_layout3->addWidget(linearFilterZeroButton);
+    m_option_layout3->addWidget(linearFilterKonstButton);
 
 
     tabWidget->addTab(m_option_panel3,"Aufgabenblatt 3");
