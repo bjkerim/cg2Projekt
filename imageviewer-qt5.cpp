@@ -47,6 +47,7 @@
 
 int xLinearFilterValue;
 int yLinearFilterValue;
+float sigma;
 
 ImageViewer::ImageViewer()
 {
@@ -1070,7 +1071,7 @@ void ImageViewer::linearFilterZeroPadding(){
     int LHotspotY = filterArrayHeight/2;
     int KHotspotx = filterArrayWidth/2;
 
-    for (int v = 0; v < image->height(); v++){ //Lässt den Rand frei
+    for (int v = 0; v < image->height(); v++){
         for (int u = 0; u < image->width(); u++){
 
             int cbTemp = 128+((qRed(image->pixel(v,u)) * -0.169) + (qGreen(image->pixel(v,u))* -0.331) + (qBlue(image->pixel(v,u))*0.5));
@@ -1086,13 +1087,13 @@ void ImageViewer::linearFilterZeroPadding(){
                     int yTemp = 0;
 
 
-                    if((v+j -LHotspotY) < 0 || (v+j -LHotspotY) > (image->height()-1)  || (u+i-KHotspotx) < 0 || (u+i-KHotspotx) > (image->width()-1)) {
+                    if((v+j) < 0 || (v+j) > (image->height()-1)  || (u+i) < 0 || (u+i) > (image->width()-1)) {
 
                         yTemp = getYfromRGB(127);
                     }
 
                     else{
-                        yTemp = getYfromRGB(image->pixel(v+i, u+j));
+                        yTemp = getYfromRGB(image->pixel(v+j, u+i));
 
                     }
 
@@ -1131,7 +1132,7 @@ void ImageViewer::linearFilterKonstPadding(){
         }
     }
 
-    double sEinzelGewichtung = 1.0/filterKoeffSum;
+    double sHotspotGewichtung = 1.0/filterKoeffSum;
 
     //schritte um den hotspot-pixel herum
     int LHotspotY = filterArrayHeight/2;
@@ -1153,13 +1154,13 @@ void ImageViewer::linearFilterKonstPadding(){
                     int yTemp = 0;
 
 
-                    if((v+j -LHotspotY) < 0 || (v+j -LHotspotY) > (image->height()-1)  || (u+i-KHotspotx) < 0 || (u+i-KHotspotx) > (image->width()-1)) {
+                    if((v+j) < 0 || (v+j) >= (image->height())  || (u+i) < 0 || (u+i) >= (image->width())) {
 
                         yTemp = getYfromRGB(image->pixel(v,u));
                     }
 
                     else{
-                        yTemp = getYfromRGB(image->pixel(v+i, u+j));
+                        yTemp = getYfromRGB(image->pixel(v+j, u+i));
 
                     }
 
@@ -1170,7 +1171,7 @@ void ImageViewer::linearFilterKonstPadding(){
 
                 }
             }
-            int newY = (int) ((sEinzelGewichtung* sum) + 0.5);
+            int newY = (int) ((sHotspotGewichtung* sum) + 0.5);
 
 
             QRgb color = convertYcbcrToRgb(newY, cbTemp, crTemp);
@@ -1181,27 +1182,78 @@ void ImageViewer::linearFilterKonstPadding(){
     imageLabel->setPixmap(QPixmap::fromImage(*imageCopy));
 }
 
-void ImageViewer::DoubleDGauss(){
-    //beliebige werte von sgima, bei breiterer glocke mehr samplingwerte notwendig um den verlauf wiederzugeben
-    //diskreter gaußfilter minimale ausdehung von - oder + 3 sigma
+void ImageViewer::doubleDGauss(){
 
-/*pseudocode
- * float[] makeGaussKernel1d(double sigma){
- * //create the kernel h:
- * int center = (int) (3.0 * sigma);
- * float[] h = new float[2* center+1]; //odd size weil
- * //fill the kernel h:
- * double sigma2 = sigma *sigma; //sigma²
- * for (int i = 0; i < h.length; i++){ //setzt die index werte in die gauss funktion ein, index verschiebt sich dass mitte des arrays auf null ist. sigma quadrat unverändert über alle schleifen
- * double r = center -i;
- * h[i] = (float) Math.exp(-0.5 * (r*r) / sigma2);
- * }
- * return h;
- * }
- *
+    *imageCopy = *image;
+    float sigma = sigmaInput->text().toFloat();
+    qDebug()<< "Wert von Sigma" << sigma;
+    int hotspotGewichtung = 0;
 
+
+    //create the kernel h:
+    int center = (int) (3.0 * sigma);
+    float hArray = 2*center+1;
+
+    std::vector<float> h = {hArray}; //odd size weil
+
+    int hLength = sizeof(h);
+    int steps = hLength/2;
+
+    //fill the kernel h:
+    double sigmaQuadr = sigma *sigma; //sigma²
+
+    for (int i = 0; i < hLength; i++){ //setzt die index werte in die gauss funktion ein, index verschiebt sich dass mitte des arrays auf null ist. sigma quadrat unverändert über alle schleifen
+        double r = center -i;
+        h.push_back((float) std::exp(-0.5 * (r*r) / sigmaQuadr));
+    }
+
+    for(int g = 0; g < hLength; g++){
+        hotspotGewichtung += h[g];
+    }
+
+
+ //erstelle kernel vektor h für bestimmung über die werte
+ // iteriere über das bild und wende entstandenen vektor von links nach rechts an
+ // iteriere über das bild und wende entstandenen vector vonoben nach unten an
+ //beliebige werte von sgima, bei breiterer glocke mehr samplingwerte notwendig um den verlauf wiederzugeben
+ //diskreter gaußfilter minimale ausdehung von - oder + 3 sigma
+
+    for(int u = 0; u < image->width(); u++){
+        for(int v = 0; v < image->height(); v++){
+            int cbTemp = 128+((qRed(image->pixel(u,v)) * -0.169) + (qGreen(image->pixel(u,v))* -0.331) + (qBlue(image->pixel(u,v))*0.5));
+            int crTemp = 128+((qRed(image->pixel(u,v)) * 0.5) + (qGreen(image->pixel(u,v))* -0.419) + (qBlue(image->pixel(u,v))*-0.081));
+
+            int sum = 0;
+
+            for (int s = (-steps); s <= steps; s++){
+                    int yTemp = 0;
+
+                    if((u+s) < 0 || (u+s) >= (image->height())) {
+
+                        yTemp = getYfromRGB(image->pixel(u,v));
+                    }
+
+                    else{
+                        yTemp = getYfromRGB(image->pixel(u+s,v));
+
+                    }
+
+                    int c = h[s];
+
+                    sum += c * yTemp;
+
+            }
+    int newY = (int) (sum/hotspotGewichtung);
+
+
+    QRgb color = convertYcbcrToRgb(newY, cbTemp, crTemp);
+
+    imageCopy->setPixel(u,v, color);
+        }
+    }
+
+imageLabel->setPixmap(QPixmap::fromImage(*imageCopy));
 }
-
 
 void ImageViewer::generateControlPanels()
 {
@@ -1375,6 +1427,7 @@ void ImageViewer::generateControlPanels()
 
 
 
+
     m_option_layout3->addWidget(sliderColorBit);
     m_option_layout3->addWidget(sliderColorBrightness);
     m_option_layout3->addWidget(sliderKontrastColor);
@@ -1392,6 +1445,22 @@ void ImageViewer::generateControlPanels()
 
 
     tabWidget->addTab(m_option_panel3,"Aufgabenblatt 3");
+
+ //****************************************TAB 4, GAUSS************************************************//
+    m_option_panel4 = new QWidget();
+    m_option_layout4 = new QVBoxLayout();
+    m_option_panel4 ->setLayout(m_option_layout4);
+
+    gaussFilterButton = new QPushButton();
+    gaussFilterButton->setText("colorHistgoramButton");
+    QObject::connect(gaussFilterButton, SIGNAL (clicked()), this, SLOT (doubleDGauss()));
+
+    sigmaInput = new QLineEdit();
+
+    m_option_layout4->addWidget(sigmaInput);
+    m_option_layout4->addWidget(gaussFilterButton);
+
+    tabWidget->addTab(m_option_panel4,"Aufgabenblatt 3d)");
 
 
 

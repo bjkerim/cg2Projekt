@@ -47,6 +47,7 @@
 #endif
 
 #include "fstream"
+#include <QLineEdit>
 
 class QAction;
 class QLabel;
@@ -112,6 +113,8 @@ private:
     QTableWidget* linearFilterTable;
     QPushButton* linearFilterZeroButton;
     QPushButton* linearFilterKonstButton;
+    QLineEdit* sigmaInput;
+    QPushButton * gaussFilterButton;
 
 
     // hier können weitere GUI Objekte hin wie Buttons Slider etc.
@@ -147,6 +150,7 @@ private slots:
     int getYfromRGB(int color);
     void linearFilterZeroPadding();
     void linearFilterKonstPadding();
+    void doubleDGauss();
 
 
 
