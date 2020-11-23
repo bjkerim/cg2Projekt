@@ -113,6 +113,7 @@ private:
     QTableWidget* linearFilterTable;
     QPushButton* linearFilterZeroButton;
     QPushButton* linearFilterKonstButton;
+    QPushButton* linearFilterReflectionButton;
     QLineEdit* sigmaInput;
     QPushButton * gaussFilterButton;
 
@@ -146,10 +147,11 @@ private slots:
     int getLinearYValue();
     void linearFilter();
     int convertYcbcrToRgb(int y, int cb, int cr);
-    int * convertToYcbcr(QRgb color);
+    std::vector<int> convertToYcbcr(QRgb color);
     int getYfromRGB(int color);
     void linearFilterZeroPadding();
     void linearFilterKonstPadding();
+    void linearFilterReflectionPadding();
     void doubleDGauss();
 
 

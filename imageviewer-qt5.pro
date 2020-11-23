@@ -1,3 +1,6 @@
+CONFIG += sanitizer
+CONFIG += sanitize_address
+CONFIG += stack_protector
 QT += widgets
 qtHaveModule(printsupport): QT += printsupport
 
