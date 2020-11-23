@@ -113,6 +113,25 @@ int ImageViewer::convertYcbcrToRgb(int y, int cb, int cr){
     return newColor;
 }
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 void ImageViewer::setLinearXValue(int x){
     xLinearFilterValue = x;
 }
@@ -1257,7 +1276,7 @@ void ImageViewer::doubleDGauss(){
     *imageCopy = *image;
     float sigma = sigmaInput->text().toFloat();
     qDebug()<< "Wert von Sigma" << sigma;
-    float hotspotGewichtung = 0.0;
+    int hotspotGewichtung = 0;
 
     //create the kernel h:
     int center = (int) ((3.0 * sigma)+0.5);
@@ -1273,7 +1292,7 @@ void ImageViewer::doubleDGauss(){
     for (int i = 0; i < hLength; i++){ //setzt die index werte in die gauss funktion ein, index verschiebt sich dass mitte des arrays auf null ist. sigma quadrat unverändert über alle schleifen
         double r = center -i;
 
-        h[i] = ((float) std::exp(-0.5 * (r*r) / sigmaQuadr));
+        h[i] = ((float) std::exp((-0.5 * (r*r)) / sigmaQuadr)+0.5);
     }
 
     for(int g = 0; g < hLength; g++){
@@ -1283,9 +1302,11 @@ void ImageViewer::doubleDGauss(){
 
     for(int spalte = 0; spalte < image->width(); spalte++){
         for(int zeile = 0; zeile < image->height(); zeile++){
-            int cbTemp = 0;
-            int crTemp = 0;
+
+            int cbTemp = (qBlue(image->pixel(spalte,zeile)));
+            int crTemp = 128+((qRed(image->pixel(spalte,zeile)) * 0.5) + (qGreen(image->pixel(spalte,zeile))* -0.419) + (qBlue(image->pixel(spalte,zeile))*-0.081));
             int sumY = 0;
+
 
             for (int s = (-steps); s <= steps; s++){
                 int yTemp = 0;
@@ -1293,15 +1314,12 @@ void ImageViewer::doubleDGauss(){
                 if((spalte+s) < 0 || (spalte+s) >= (image->height())) {
 
                     yTemp = getYfromRGB(image->pixel(spalte,zeile));
-                    cbTemp = 128+((qRed(image->pixel(spalte,zeile)) * -0.169) + (qGreen(image->pixel(spalte,zeile))* -0.331) + (qBlue(image->pixel(spalte,zeile))*0.5));
-                    crTemp = 128+((qRed(image->pixel(spalte,zeile)) * 0.5) + (qGreen(image->pixel(spalte,zeile))* -0.419) + (qBlue(image->pixel(spalte,zeile))*-0.081));
 
                 }
 
                 else{
                     yTemp = getYfromRGB(image->pixel(spalte+s,zeile));
-                    cbTemp = 128+((qRed(image->pixel(spalte+s,zeile)) * -0.169) + (qGreen(image->pixel(spalte+s,zeile))* -0.331) + (qBlue(image->pixel(spalte+s,zeile))*0.5));
-                    crTemp = 128+((qRed(image->pixel(spalte+s,zeile)) * 0.5) + (qGreen(image->pixel(spalte+s,zeile))* -0.419) + (qBlue(image->pixel(spalte+s,zeile))*-0.081));
+
 
                 }
 
@@ -1315,6 +1333,46 @@ void ImageViewer::doubleDGauss(){
             QRgb color = convertYcbcrToRgb(newY, cbTemp, crTemp);
 
             imageCopy->setPixel(spalte,zeile, color);
+        }
+    }
+
+    imageGauss = new QImage(*imageCopy);
+
+
+
+    for(int spalte = 0; spalte < image->width(); spalte++){
+        for(int zeile = 0; zeile < image->height(); zeile++){
+
+            int cbTemp = (qBlue(imageGauss->pixel(spalte,zeile)));
+            int crTemp = 128+((qRed(imageGauss->pixel(spalte,zeile)) * 0.5) + (qGreen(imageGauss->pixel(spalte,zeile))* -0.419) + (qBlue(imageGauss->pixel(spalte,zeile))*-0.081));
+            int sumY = 0;
+
+
+            for (int s = (-steps); s <= steps; s++){
+                int yTemp = 0;
+
+                if((zeile+s) < 0 || (zeile+s) >= (image->width())) {
+
+                    yTemp = getYfromRGB(imageGauss->pixel(spalte,zeile));
+
+                }
+
+                else{
+                    yTemp = getYfromRGB(imageGauss->pixel(spalte,zeile+s));
+
+
+                }
+
+                int c = h[s+steps];
+
+                sumY += c * yTemp;
+
+            }
+            int newY = (int) (sumY/hotspotGewichtung);
+
+            QRgb color = convertYcbcrToRgb(newY, cbTemp, crTemp);
+
+            imageCopy->setPixel(spalte,zeile,color);
         }
     }
 
