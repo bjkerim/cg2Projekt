@@ -1257,12 +1257,10 @@ void ImageViewer::doubleDGauss(){
     *imageCopy = *image;
     float sigma = sigmaInput->text().toFloat();
     qDebug()<< "Wert von Sigma" << sigma;
-    int hotspotGewichtung = 0;
-
+    float hotspotGewichtung = 0.0;
 
     //create the kernel h:
     int center = (int) ((3.0 * sigma)+0.5);
-    //float hArray = (2*center)+1;
 
     std::vector<float> h((2*center)+1); //odd size weil
 
@@ -1274,29 +1272,20 @@ void ImageViewer::doubleDGauss(){
 
     for (int i = 0; i < hLength; i++){ //setzt die index werte in die gauss funktion ein, index verschiebt sich dass mitte des arrays auf null ist. sigma quadrat unverändert über alle schleifen
         double r = center -i;
-        //ab hier mit hilfe mit wikipedia:
-        //h.push_back(1.0/(qSqrt(2*3.14159265358979)*sigma)*((float) std::exp(-0.5 * (r*r) / sigmaQuadr)));
+
         h[i] = ((float) std::exp(-0.5 * (r*r) / sigmaQuadr));
     }
 
     for(int g = 0; g < hLength; g++){
-        hotspotGewichtung += h[g];
+
+        hotspotGewichtung = hotspotGewichtung + h[g];
     }
-
-
-    //erstelle kernel vektor h für bestimmung über die werte
-    // iteriere über das bild und wende entstandenen vektor von links nach rechts an
-    // iteriere über das bild und wende entstandenen vector vonoben nach unten an
-    //beliebige werte von sgima, bei breiterer glocke mehr samplingwerte notwendig um den verlauf wiederzugeben
-    //diskreter gaußfilter minimale ausdehung von - oder + 3 sigma
 
     for(int spalte = 0; spalte < image->width(); spalte++){
         for(int zeile = 0; zeile < image->height(); zeile++){
             int cbTemp = 0;
             int crTemp = 0;
             int sumY = 0;
-            int sumCB = 0;
-            int sumCR = 0;
 
             for (int s = (-steps); s <= steps; s++){
                 int yTemp = 0;
@@ -1319,64 +1308,15 @@ void ImageViewer::doubleDGauss(){
                 int c = h[s+steps];
 
                 sumY += c * yTemp;
-                sumCB += c * cbTemp;
-                sumCR += c * crTemp;
 
             }
             int newY = (int) (sumY/hotspotGewichtung);
-            int newCB = (int) (sumCB/hotspotGewichtung);
-            int newCR = (int) (sumCR/hotspotGewichtung);
 
-            QRgb color = convertYcbcrToRgb(newY, newCB, newCR);
+            QRgb color = convertYcbcrToRgb(newY, cbTemp, crTemp);
 
             imageCopy->setPixel(spalte,zeile, color);
         }
     }
-    *imageGauss = imageCopy->copy();
-
-    for(int spalte = 0; spalte < image->width(); spalte++){
-        for(int zeile = 0; zeile < image->height(); zeile++){
-            int cbTemp = 0;
-            int crTemp = 0;
-            int sumY = 0;
-            int sumCB = 0;
-            int sumCR = 0;
-
-            for (int s = (-steps); s <= steps; s++){
-                int yTemp = 0;
-
-                if((zeile+s) < 0 || (zeile+s) >= (image->width())) {
-
-                    yTemp = getYfromRGB(imageGauss->pixel(spalte,zeile));
-                    cbTemp = 128+((qRed(imageGauss->pixel(spalte,zeile)) * -0.169) + (qGreen(imageGauss->pixel(spalte,zeile))* -0.331) + (qBlue(imageGauss->pixel(spalte,zeile))*0.5));
-                    crTemp = 128+((qRed(imageGauss->pixel(spalte,zeile)) * 0.5) + (qGreen(imageGauss->pixel(spalte,zeile))* -0.419) + (qBlue(imageGauss->pixel(spalte,zeile))*-0.081));
-
-                }
-
-                else{
-                    yTemp = getYfromRGB(imageGauss->pixel(spalte,zeile+s));
-                    cbTemp = 128+((qRed(imageGauss->pixel(spalte,zeile+s)) * -0.169) + (qGreen(imageGauss->pixel(spalte,zeile+s))* -0.331) + (qBlue(imageGauss->pixel(spalte,zeile+s))*0.5));
-                    crTemp = 128+((qRed(imageGauss->pixel(spalte,zeile+s)) * 0.5) + (qGreen(imageGauss->pixel(spalte,zeile+s))* -0.419) + (qBlue(imageGauss->pixel(spalte,zeile+s))*-0.081));
-
-                }
-
-                int c = h[s+steps];
-
-                sumY += c * yTemp;
-                sumCB += c * cbTemp;
-                sumCR += c * crTemp;
-
-            }
-            int newY = (int) (sumY/hotspotGewichtung);
-            int newCB = (int) (sumCB/hotspotGewichtung);
-            int newCR = (int) (sumCR/hotspotGewichtung);
-
-            QRgb color = convertYcbcrToRgb(newY, newCB, newCR);
-
-            imageCopy->setPixel(spalte, zeile, color);
-        }
-    }
-
 
     imageLabel->setPixmap(QPixmap::fromImage(*imageCopy));
 }
