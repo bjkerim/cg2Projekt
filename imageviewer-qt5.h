@@ -211,6 +211,7 @@ private:
     QImage* image;
     QImage* imageCopy;
     QImage* imageGray;
+    QImage* imageGauss;
     QImage* myHistogram;
     QImage* myHistogramColor;
     QImage* mirrorImage;

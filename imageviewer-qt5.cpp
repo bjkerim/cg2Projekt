@@ -1222,7 +1222,7 @@ void ImageViewer::linearFilterReflectionPadding(){
 
                     if((v+j) < 0 || (v+j) >= (image->height())) {
 
-                            yTemp = getYfromRGB(image->pixel(v-j,u));
+                        yTemp = getYfromRGB(image->pixel(v-j,u));
 
                     }
                     else if((u+i) < 0 || (u+i) >= (image->width())){
@@ -1290,8 +1290,8 @@ void ImageViewer::doubleDGauss(){
     //beliebige werte von sgima, bei breiterer glocke mehr samplingwerte notwendig um den verlauf wiederzugeben
     //diskreter gaußfilter minimale ausdehung von - oder + 3 sigma
 
-    for(int u = 0; u < image->width(); u++){
-        for(int v = 0; v < image->height(); v++){
+    for(int spalte = 0; spalte < image->width(); spalte++){
+        for(int zeile = 0; zeile < image->height(); zeile++){
             int cbTemp = 0;
             int crTemp = 0;
             int sumY = 0;
@@ -1301,18 +1301,18 @@ void ImageViewer::doubleDGauss(){
             for (int s = (-steps); s <= steps; s++){
                 int yTemp = 0;
 
-                if((u+s) < 0 || (u+s) >= (image->height())) {
+                if((spalte+s) < 0 || (spalte+s) >= (image->height())) {
 
-                    yTemp = getYfromRGB(image->pixel(u,v));
-                   cbTemp = 128+((qRed(image->pixel(u,v)) * -0.169) + (qGreen(image->pixel(u,v))* -0.331) + (qBlue(image->pixel(u,v))*0.5));
-                   crTemp = 128+((qRed(image->pixel(u,v)) * 0.5) + (qGreen(image->pixel(u,v))* -0.419) + (qBlue(image->pixel(u,v))*-0.081));
+                    yTemp = getYfromRGB(image->pixel(spalte,zeile));
+                    cbTemp = 128+((qRed(image->pixel(spalte,zeile)) * -0.169) + (qGreen(image->pixel(spalte,zeile))* -0.331) + (qBlue(image->pixel(spalte,zeile))*0.5));
+                    crTemp = 128+((qRed(image->pixel(spalte,zeile)) * 0.5) + (qGreen(image->pixel(spalte,zeile))* -0.419) + (qBlue(image->pixel(spalte,zeile))*-0.081));
 
                 }
 
                 else{
-                    yTemp = getYfromRGB(image->pixel(u+s,v));
-                    cbTemp = 128+((qRed(image->pixel(u+s,v)) * -0.169) + (qGreen(image->pixel(u+s,v))* -0.331) + (qBlue(image->pixel(u+s,v))*0.5));
-                    crTemp = 128+((qRed(image->pixel(u+s,v)) * 0.5) + (qGreen(image->pixel(u+s,v))* -0.419) + (qBlue(image->pixel(u+s,v))*-0.081));
+                    yTemp = getYfromRGB(image->pixel(spalte+s,zeile));
+                    cbTemp = 128+((qRed(image->pixel(spalte+s,zeile)) * -0.169) + (qGreen(image->pixel(spalte+s,zeile))* -0.331) + (qBlue(image->pixel(spalte+s,zeile))*0.5));
+                    crTemp = 128+((qRed(image->pixel(spalte+s,zeile)) * 0.5) + (qGreen(image->pixel(spalte+s,zeile))* -0.419) + (qBlue(image->pixel(spalte+s,zeile))*-0.081));
 
                 }
 
@@ -1329,9 +1329,54 @@ void ImageViewer::doubleDGauss(){
 
             QRgb color = convertYcbcrToRgb(newY, newCB, newCR);
 
-            imageCopy->setPixel(u,v, color);
+            imageCopy->setPixel(spalte,zeile, color);
         }
     }
+    *imageGauss = imageCopy->copy();
+
+    for(int spalte = 0; spalte < image->width(); spalte++){
+        for(int zeile = 0; zeile < image->height(); zeile++){
+            int cbTemp = 0;
+            int crTemp = 0;
+            int sumY = 0;
+            int sumCB = 0;
+            int sumCR = 0;
+
+            for (int s = (-steps); s <= steps; s++){
+                int yTemp = 0;
+
+                if((zeile+s) < 0 || (zeile+s) >= (image->width())) {
+
+                    yTemp = getYfromRGB(imageGauss->pixel(spalte,zeile));
+                    cbTemp = 128+((qRed(imageGauss->pixel(spalte,zeile)) * -0.169) + (qGreen(imageGauss->pixel(spalte,zeile))* -0.331) + (qBlue(imageGauss->pixel(spalte,zeile))*0.5));
+                    crTemp = 128+((qRed(imageGauss->pixel(spalte,zeile)) * 0.5) + (qGreen(imageGauss->pixel(spalte,zeile))* -0.419) + (qBlue(imageGauss->pixel(spalte,zeile))*-0.081));
+
+                }
+
+                else{
+                    yTemp = getYfromRGB(imageGauss->pixel(spalte,zeile+s));
+                    cbTemp = 128+((qRed(imageGauss->pixel(spalte,zeile+s)) * -0.169) + (qGreen(imageGauss->pixel(spalte,zeile+s))* -0.331) + (qBlue(imageGauss->pixel(spalte,zeile+s))*0.5));
+                    crTemp = 128+((qRed(imageGauss->pixel(spalte,zeile+s)) * 0.5) + (qGreen(imageGauss->pixel(spalte,zeile+s))* -0.419) + (qBlue(imageGauss->pixel(spalte,zeile+s))*-0.081));
+
+                }
+
+                int c = h[s+steps];
+
+                sumY += c * yTemp;
+                sumCB += c * cbTemp;
+                sumCR += c * crTemp;
+
+            }
+            int newY = (int) (sumY/hotspotGewichtung);
+            int newCB = (int) (sumCB/hotspotGewichtung);
+            int newCR = (int) (sumCR/hotspotGewichtung);
+
+            QRgb color = convertYcbcrToRgb(newY, newCB, newCR);
+
+            imageCopy->setPixel(spalte, zeile, color);
+        }
+    }
+
 
     imageLabel->setPixmap(QPixmap::fromImage(*imageCopy));
 }
