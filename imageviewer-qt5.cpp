@@ -113,25 +113,6 @@ int ImageViewer::convertYcbcrToRgb(int y, int cb, int cr){
     return newColor;
 }
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 void ImageViewer::setLinearXValue(int x){
     xLinearFilterValue = x;
 }
@@ -156,7 +137,7 @@ void ImageViewer::createImageColor() {
 
 void ImageViewer::createImageBlackCopy() {
 
-    imageCopy = new QImage(*imageGray);
+    imageGray = new QImage(*image);
 }
 
 
@@ -183,12 +164,14 @@ void ImageViewer::applyCross(int kreuzBreite)
 
     }
 
-    logFile << "applyCross algorithm applied " << std::endl;
-
-
-
 
     renewLogging();
+}
+
+
+
+void ImageViewer::deleteCross() {
+    imageLabel->setPixmap(QPixmap::fromImage(*image));
 }
 
 
@@ -197,7 +180,7 @@ void ImageViewer::convertToGrayscale(){
     if(image != NULL){
         int w = image->width();
         int h = image->height();
-        imageGray = new QImage(*image);
+        createImageBlackCopy();
 
 
         for (int i = 0; i <= w-1; i++){
@@ -209,7 +192,6 @@ void ImageViewer::convertToGrayscale(){
         }
     }
     imageLabel->setPixmap(QPixmap::fromImage(*imageGray));
-    logFile << "convertToGrayscale algorithm applied " << std::endl;
 
     renewLogging();
     //    if(imageGray != NULL){
@@ -217,18 +199,18 @@ void ImageViewer::convertToGrayscale(){
     //        imageGray = NULL;
     //    }
 
-    createImageBlackCopy();
+
 }
 
 void ImageViewer::averageBrightness(){
 
-    if(image!=NULL){
+    if(imageGray!=NULL){
 
 
         int w = image->width();
         int h = image->height();
 
-        int middleBrightness;
+        int middleBrightness = 0;
         long brightnessAddition = 0;
         long pixelCount = w*h;
 
@@ -236,22 +218,21 @@ void ImageViewer::averageBrightness(){
 
         for (int i = 0; i < w; i++){
             for(int j = 0; j < h; j++ ){
-                brightnessAddition += qRed(imageCopy->pixel(i,j));
+                brightnessAddition += qRed(imageGray->pixel(i,j));
             }
         }
         middleBrightness = (brightnessAddition/pixelCount);
 
-        labelMiddleBrightness->setText(QString::number(middleBrightness));
+        labelMiddleBrightness->setText("Die Mittlere Helligkeit beträgt: " + QString::number(middleBrightness));
 
-        logFile << "middleBrightness algorithm applied " << std::endl;
         renewLogging();
 
     }}
 
 void ImageViewer::varianz(){
-    imageCopy = new QImage(*imageGray);
-    if(imageCopy != NULL){
 
+    if(imageGray!=NULL){
+        *imageGray = *image;
         int w = image->width();
         int h = image->height();
 
@@ -265,7 +246,7 @@ void ImageViewer::varianz(){
 
         for (int i = 0; i < w; i++){
             for(int j = 0; j < h; j++ ){
-                brightnessSumAverage += qRed(imageCopy->pixel(i,j));
+                brightnessSumAverage += qRed(imageGray->pixel(i,j));
             }
         }
 
@@ -274,7 +255,7 @@ void ImageViewer::varianz(){
 
         for (int i = 0; i < w; i++){
             for(int j = 0; j < h; j++ ){
-                brightnessSum = qRed(image->pixel(i,j)) - averageBrightness;
+                brightnessSum = qRed(imageGray->pixel(i,j)) - averageBrightness;
                 tempRes += (brightnessSum*brightnessSum);
 
             }
@@ -283,18 +264,17 @@ void ImageViewer::varianz(){
         int myVarianz = tempRes/pixelCount;
 
         brightnessSum = brightnessSum*brightnessSum;
-        labelVarianz->setText(QString::number(brightnessSum));
-        logFile << "varianz algorithm applied " << std::endl;
+        labelVarianz->setText("Die Varianz beträgt: " + QString::number(brightnessSum));
         renewLogging();
     }
 }
 
 void ImageViewer::bitDynamik(int bits){
-    if(image != NULL){
-
+    if(imageGray!=NULL){
+        *imageGray = *image;
         int w = image->width();
         int h = image->height();
-        *imageCopy = *imageGray;
+
 
 
         int bit = bits;
@@ -305,16 +285,19 @@ void ImageViewer::bitDynamik(int bits){
 
         for (int i = 0; i < w; i++){
             for(int j = 0; j < h; j++ ){
-                pixelBereich = ((qRed(imageCopy->pixel(i,j)))/ausGrenze)+1;
+                pixelBereich = ((qRed(imageGray->pixel(i,j)))/ausGrenze)+1;
                 neuWert = (ausGrenze * pixelBereich)-1;
-                imageCopy->setPixel(i, j, qRgb(neuWert,neuWert,neuWert));
+                imageGray->setPixel(i, j, qRgb(neuWert,neuWert,neuWert));
 
 
             }
         }
-        imageLabel->setPixmap(QPixmap::fromImage(*imageCopy));
+        imageLabel->setPixmap(QPixmap::fromImage(*imageGray));
 
     }
+    histogram();
+    averageBrightness();
+
 
 }
 
@@ -382,48 +365,52 @@ void ImageViewer::bitDynamikColor(int bits){
 
 void ImageViewer::histogram() {
 
-    QPixmap histogramMap(256,256);
-    histogramMap.fill(QColor("white"));
-    myHistogram = new QImage(256, 100, QImage::Format_RGB32);
-    myHistogram->fill(Qt::white);
+
+    if(imageGray!=NULL){
+
+        QPixmap histogramMap(256,256);
+        histogramMap.fill(QColor("white"));
+        myHistogram = new QImage(256, 100, QImage::Format_RGB32);
+        myHistogram->fill(Qt::white);
 
 
-    int myArray[256]= {0};
-    int prozentArray[256] = {0};
-    int myValue = 0;
+        int myArray[256]= {0};
+        int prozentArray[256] = {0};
+        int myValue = 0;
 
 
-    for (int i = 0; i<image->width() ;i++) {
-        for (int j = 0; j<image->height(); j++){
-            myValue = qRed(imageCopy->pixel(i,j));
-            myArray[myValue] += 1;
+        for (int i = 0; i<image->width() ;i++) {
+            for (int j = 0; j<image->height(); j++){
+                myValue = qRed(imageGray->pixel(i,j));
+                myArray[myValue] += 1;
 
+            }
         }
-    }
-    int greatestNumber = 0;
+        int greatestNumber = 0;
 
-    for(int c = 0; c<256; c++){
-        if (myArray[c] > greatestNumber){
-            greatestNumber = myArray[c];
-            // logFile << "Position: " << c << " " << "Wert: " <<myArray[c]<< std::endl;
+        for(int c = 0; c<256; c++){
+            if (myArray[c] > greatestNumber){
+                greatestNumber = myArray[c];
+                // logFile << "Position: " << c << " " << "Wert: " <<myArray[c]<< std::endl;
 
-        }}
+            }}
 
-    int endWert[256] = {0};
-    for (int k = 0; k<256 ;k++){
-        endWert[k] = (myArray[k]/(greatestNumber/100));
-        //*logFile << "Position: " << k << " " << "Wert: " <<endWert[k]<< std::endl;
-    }
-
-    for (int z = 0; z<256; z++){
-        for (int h=0; h<(100-endWert[z]); h++){
-            myHistogram->setPixelColor(z,h, Qt::black);
+        int endWert[256] = {0};
+        for (int k = 0; k<256 ;k++){
+            endWert[k] = (myArray[k]/(greatestNumber/100));
+            //*logFile << "Position: " << k << " " << "Wert: " <<endWert[k]<< std::endl;
         }
 
-    }
-    meinHistogram->setPixmap(QPixmap::fromImage(*myHistogram));
-    meinHistogram->show();
+        for (int z = 0; z<256; z++){
+            for (int h=0; h<(100-endWert[z]); h++){
+                myHistogram->setPixelColor(z,h, Qt::black);
+            }
 
+        }
+        meinHistogram->setPixmap(QPixmap::fromImage(*myHistogram));
+        meinHistogram->show();
+
+    }
 }
 
 /************************************************/
@@ -550,34 +537,35 @@ void ImageViewer::histogramColor() {
 /*******************************************************************/
 
 void ImageViewer::helligkeit(int helligkeitswert) {
+    if(imageGray!=NULL){
+        *imageGray = *image;
 
-    *imageCopy = *imageGray;
-
-    int w = image->width();
-    int h = image->height();
+        int w = image->width();
+        int h = image->height();
 
 
-    for (int i=0; i<w; i++){
-        for (int j=0; j<h; j++){
+        for (int i=0; i<w; i++){
+            for (int j=0; j<h; j++){
 
-            QRgb myValue = imageGray->pixel(i,j);
+                QRgb myValue = imageGray->pixel(i,j);
 
-            int newColor = ((qRed(myValue)*0.299) + (qGreen(myValue)*0.587) + (qBlue(myValue)*0.114)) + helligkeitswert; //* Gewichtung miteinberechnen
+                int newColor = ((qRed(myValue)*0.299) + (qGreen(myValue)*0.587) + (qBlue(myValue)*0.114)) + helligkeitswert; //* Gewichtung miteinberechnen
 
-            if (newColor < 0){
-                newColor = 0;}
-            else if (newColor > 255 ){
-                newColor = 255; }
+                if (newColor < 0){
+                    newColor = 0;}
+                else if (newColor > 255 ){
+                    newColor = 255; }
 
-            QRgb color = qRgb(newColor, newColor, newColor);
-            imageCopy->setPixel(i,j,color);
+                QRgb color = qRgb(newColor, newColor, newColor);
+                imageGray->setPixel(i,j,color);
 
+            }
         }
-    }
 
-    imageLabel->setPixmap(QPixmap::fromImage(*imageCopy));
-
-}
+        imageLabel->setPixmap(QPixmap::fromImage(*imageGray));
+        averageBrightness();
+               histogram();
+    }}
 
 /*************************************************************************/
 
@@ -635,70 +623,73 @@ void ImageViewer::helligkeitColor(int helligkeitswert) {
 /***************************************************************************/
 
 void ImageViewer::kontrast(int konstante) {
+    if(imageGray!=NULL){
+        *imageGray = *image;
 
-    convertToGrayscale();
+        int w = image->width();
+        int h = image->height();
+        int low = 0;
+        int high = 0;
+        int mid = 0;
+        low = qRed(image->pixel(0,0));
+        high = qRed(image->pixel(0,0));
+        for (int i=0; i <w; i++){
+            for (int j = 0; j<h; j++){
 
-    int w = image->width();
-    int h = image->height();
-    int low = 0;
-    int high = 0;
-    int mid = 0;
-    low = qRed(image->pixel(0,0));
-    high = qRed(image->pixel(0,0));
-    for (int i=0; i <w; i++){
-        for (int j = 0; j<h; j++){
+                int aktuellerWert = qRed(image->pixel(i,j));
+                if (aktuellerWert < low){
+                    low = aktuellerWert;
+                }
+                if (aktuellerWert > high){
+                    low = aktuellerWert;
 
-            int aktuellerWert = qRed(image->pixel(i,j));
-            if (aktuellerWert < low){
-                low = aktuellerWert;
+                }
             }
-            if (aktuellerWert > high){
-                low = aktuellerWert;
+        }
+
+        mid = (high+low)/2;
+
+
+        for (int i=0; i <w; i++){
+            for (int j = 0; j<h; j++){
+                int newPixelValue = 0;
+                if (konstante > 0) {
+                    newPixelValue = (((qRed(image->pixel(i,j)) - mid) * konstante)) + 0.5;
+                }
+
+                else if (konstante < 0) {
+
+                    newPixelValue = (((qRed(image->pixel(i,j)) - mid) / std::abs(konstante))) + 0.5;
+                }
+
+                else if (konstante == 0) {
+                    imageLabel->setPixmap(QPixmap::fromImage(*imageGray));
+
+                }
+                newPixelValue = newPixelValue + mid;
+
+
+                if(newPixelValue > 255) {
+                    newPixelValue = 255;
+                }
+
+                else if (newPixelValue < 0) {
+                    newPixelValue = 0;
+                }
+
+                imageCopy->setPixel(i, j, qRgb(newPixelValue,newPixelValue,newPixelValue));
 
             }
         }
+
+
+        imageLabel->setPixmap(QPixmap::fromImage(*imageCopy));
+
+        /* logFile << "High: " << high << " " << "low: " <<low<< std::endl;*/
+        renewLogging();
     }
-
-    mid = (high+low)/2;
-
-
-    for (int i=0; i <w; i++){
-        for (int j = 0; j<h; j++){
-            int newPixelValue = 0;
-            if (konstante > 0) {
-                newPixelValue = (((qRed(image->pixel(i,j)) - mid) * konstante)) + 0.5;
-            }
-
-            else if (konstante < 0) {
-
-                newPixelValue = (((qRed(image->pixel(i,j)) - mid) / std::abs(konstante))) + 0.5;
-            }
-
-            else if (konstante == 0) {
-                imageLabel->setPixmap(QPixmap::fromImage(*imageGray));
-
-            }
-            newPixelValue = newPixelValue + mid;
-
-
-            if(newPixelValue > 255) {
-                newPixelValue = 255;
-            }
-
-            else if (newPixelValue < 0) {
-                newPixelValue = 0;
-            }
-
-            imageCopy->setPixel(i, j, qRgb(newPixelValue,newPixelValue,newPixelValue));
-
-        }
-    }
-
-
-    imageLabel->setPixmap(QPixmap::fromImage(*imageCopy));
-
-    /* logFile << "High: " << high << " " << "low: " <<low<< std::endl;*/
-    renewLogging();
+    averageBrightness();
+    histogram();
 }
 /*******************************************************/
 void ImageViewer::kontrastColor(int konstante) {
@@ -794,88 +785,88 @@ void ImageViewer::kontrastColor(int konstante) {
 
 void ImageViewer::autoKontrast(int kontrastWert) {
 
+    if(imageGray!=NULL){
+        *imageGray = *image;
+        int w = image->width();
+        int h = image->height();
 
-    *imageCopy = *image;
-    int w = image->width();
-    int h = image->height();
-
-    int neueHelligkeit = 0;
-    int aMin = 0;
-    int aMax = 255;
+        int neueHelligkeit = 0;
+        int aMin = 0;
+        int aMax = 255;
 
 
-    float kontrastProzent = kontrastWert/100.0;
-    int grenzeLow = kontrastProzent*(h*w); //  5242
-    int grenzeHigh = (1-kontrastProzent)*(h*w); // 256901
+        float kontrastProzent = kontrastWert/100.0;
+        int grenzeLow = kontrastProzent*(h*w); //  5242
+        int grenzeHigh = (1-kontrastProzent)*(h*w); // 256901
 
-    int aStrichLow = qRed(imageCopy->pixel(0,0));
-    int aStrichHigh = qRed(imageCopy->pixel(0,0));;
+        int aStrichLow = qRed(imageGray->pixel(0,0));
+        int aStrichHigh = qRed(imageGray->pixel(0,0));;
 
-    int histogram[256]= {0};
-    int kHistogram[256] = {0};
+        int histogram[256]= {0};
+        int kHistogram[256] = {0};
 
-    int aLow = 300;
-    int aHigh = 0;
+        int aLow = 300;
+        int aHigh = 0;
 
-    /* Suche hellsten und dunkelsten Wert raus */
-    for (int i=0; i<w; i++){
-        for (int j=0; j<h; j++){
-            if(qRed(imageCopy->pixel(i,j)) < aLow){
-                aLow = qRed(imageCopy->pixel(i,j));
+        /* Suche hellsten und dunkelsten Wert raus */
+        for (int i=0; i<w; i++){
+            for (int j=0; j<h; j++){
+                if(qRed(imageGray->pixel(i,j)) < aLow){
+                    aLow = qRed(imageGray->pixel(i,j));
+                }
+                else if (qRed(imageGray->pixel(i,j)) > aHigh){
+                    aHigh = qRed(imageGray->pixel(i,j));
+                }
             }
-            else if (qRed(imageCopy->pixel(i,j)) > aHigh){
-                aHigh = qRed(imageCopy->pixel(i,j));
+        }
+
+        //    /* Create Array */
+        for (int i = 0; i<w ;i++) {
+            for (int j = 0; j<h; j++){
+                int myValue = qRed(imageGray->pixel(i,j));
+                histogram[myValue] += 1;
             }
         }
-    }
 
-    //    /* Create Array */
-    for (int i = 0; i<w ;i++) {
-        for (int j = 0; j<h; j++){
-            int myValue = qRed(imageCopy->pixel(i,j));
-            histogram[myValue] += 1;
-        }
-    }
+        kHistogram[0] = histogram[0];
+        for(int i=1; i<256; i++){
 
-    kHistogram[0] = histogram[0];
-    for(int i=1; i<256; i++){
-
-        kHistogram[i] = kHistogram[i-1] + histogram[i];
-    }
-
-    for (int i=0; i<256; i++){
-        if(kHistogram[i] >= grenzeLow && i<aStrichLow){
-            aStrichLow = i;
+            kHistogram[i] = kHistogram[i-1] + histogram[i];
         }
 
-        else if (kHistogram[i]<= grenzeHigh && i > aStrichHigh){
-            aStrichHigh = i;
-        }
-    }
-
-    for (int i=0; i<w; i++){
-        for (int j=0; j<h; j++){
-            neueHelligkeit = qRed(imageCopy->pixel(i,j));
-
-            if (neueHelligkeit <= aStrichLow){
-                neueHelligkeit = aMin;
+        for (int i=0; i<256; i++){
+            if(kHistogram[i] >= grenzeLow && i<aStrichLow){
+                aStrichLow = i;
             }
 
-            else if ( neueHelligkeit >= aStrichHigh ){
-                neueHelligkeit = aMax; }
-            else {
-                neueHelligkeit =  aMin + (neueHelligkeit - aStrichLow) * ((aMax-aMin)/(aStrichHigh-aStrichLow));
+            else if (kHistogram[i]<= grenzeHigh && i > aStrichHigh){
+                aStrichHigh = i;
+            }
+        }
+
+        for (int i=0; i<w; i++){
+            for (int j=0; j<h; j++){
+                neueHelligkeit = qRed(imageGray->pixel(i,j));
+
+                if (neueHelligkeit <= aStrichLow){
+                    neueHelligkeit = aMin;
+                }
+
+                else if ( neueHelligkeit >= aStrichHigh ){
+                    neueHelligkeit = aMax; }
+                else {
+                    neueHelligkeit =  aMin + (neueHelligkeit - aStrichLow) * ((aMax-aMin)/(aStrichHigh-aStrichLow));
+
+                }
+
+                imageGray->setPixel(i,j,qRgb(neueHelligkeit,neueHelligkeit,neueHelligkeit));
 
             }
 
-            imageCopy->setPixel(i,j,qRgb(neueHelligkeit,neueHelligkeit,neueHelligkeit));
-
-        }
-
-    }    imageLabel->setPixmap(QPixmap::fromImage(*imageCopy));
-    renewLogging();
+        }    imageLabel->setPixmap(QPixmap::fromImage(*imageGray));
+        renewLogging();
+    }
 }
-
 
 /***********************************************************************************************************/
 void ImageViewer::autoKontrastColor(int kontrastWert) {
@@ -1337,9 +1328,6 @@ void ImageViewer::doubleDGauss(){
     }
 
     imageGauss = new QImage(*imageCopy);
-
-
-
     for(int spalte = 0; spalte < image->width(); spalte++){
         for(int zeile = 0; zeile < image->height(); zeile++){
 
@@ -1352,13 +1340,76 @@ void ImageViewer::doubleDGauss(){
                 int yTemp = 0;
 
                 if((zeile+s) < 0 || (zeile+s) >= (image->width())) {
-
                     yTemp = getYfromRGB(imageGauss->pixel(spalte,zeile));
-
                 }
 
                 else{
                     yTemp = getYfromRGB(imageGauss->pixel(spalte,zeile+s));
+
+                }
+                int c = h[s+steps];
+                sumY += c * yTemp;
+            }
+            int newY = (int) (sumY/hotspotGewichtung);
+
+            QRgb color = convertYcbcrToRgb(newY, cbTemp, crTemp);
+            imageCopy->setPixel(spalte,zeile,color);
+        }
+    }
+
+    imageLabel->setPixmap(QPixmap::fromImage(*imageCopy));
+}
+
+
+
+void ImageViewer::doubleDGaussCanny(){
+
+
+    float sigma = sigmaInput->text().toFloat();
+    qDebug()<< "Wert von Sigma" << sigma;
+    int hotspotGewichtung = 0;
+
+    //create the kernel h:
+    int center = (int) ((3.0 * sigma)+0.5);
+
+    std::vector<float> h((2*center)+1); //odd size weil
+
+    int hLength = h.size();
+    int steps = hLength/2;
+
+    //fill the kernel h:
+    double sigmaQuadr = sigma *sigma; //sigma²
+
+    for (int i = 0; i < hLength; i++){ //setzt die index werte in die gauss funktion ein, index verschiebt sich dass mitte des arrays auf null ist. sigma quadrat unverändert über alle schleifen
+        double r = center -i;
+
+        h[i] = ((float) std::exp((-0.5 * (r*r)) / sigmaQuadr)+0.5);
+    }
+
+    for(int g = 0; g < hLength; g++){
+
+        hotspotGewichtung = hotspotGewichtung + h[g];
+    }
+
+    for(int spalte = 0; spalte < image->width(); spalte++){
+        for(int zeile = 0; zeile < image->height(); zeile++){
+
+            int cbTemp = 128+((qRed(image->pixel(spalte,zeile)) * -0.169) + (qGreen(image->pixel(spalte,zeile))* -0.331) + (qBlue(image->pixel(spalte,zeile))*0.5));
+            int crTemp = 128+((qRed(image->pixel(spalte,zeile)) * 0.5) + (qGreen(image->pixel(spalte,zeile))* -0.419) + (qBlue(image->pixel(spalte,zeile))*-0.081));
+            int sumY = 0;
+
+
+            for (int s = (-steps); s <= steps; s++){
+                int yTemp = 0;
+
+                if((spalte+s) < 0 || (spalte+s) >= (image->height())) {
+
+                    yTemp = getYfromRGB(image->pixel(spalte,zeile));
+
+                }
+
+                else{
+                    yTemp = getYfromRGB(image->pixel(spalte+s,zeile));
 
 
                 }
@@ -1372,12 +1423,278 @@ void ImageViewer::doubleDGauss(){
 
             QRgb color = convertYcbcrToRgb(newY, cbTemp, crTemp);
 
+            imageCopy->setPixel(spalte,zeile, color);
+
+        }
+
+    }
+
+    imageGauss = new QImage(*imageCopy);
+    for(int spalte = 0; spalte < image->width(); spalte++){
+        for(int zeile = 0; zeile < image->height(); zeile++){
+
+            int cbTemp = 128+((qRed(image->pixel(spalte,zeile)) * -0.169) + (qGreen(image->pixel(spalte,zeile))* -0.331) + (qBlue(image->pixel(spalte,zeile))*0.5));
+            int crTemp = 128+((qRed(imageGauss->pixel(spalte,zeile)) * 0.5) + (qGreen(imageGauss->pixel(spalte,zeile))* -0.419) + (qBlue(imageGauss->pixel(spalte,zeile))*-0.081));
+            int sumY = 0;
+
+
+            for (int s = (-steps); s <= steps; s++){
+                int yTemp = 0;
+
+                if((zeile+s) < 0 || (zeile+s) >= (image->width())) {
+                    yTemp = getYfromRGB(imageGauss->pixel(spalte,zeile));
+                }
+
+                else{
+                    yTemp = getYfromRGB(imageGauss->pixel(spalte,zeile+s));
+
+                }
+                int c = h[s+steps];
+                sumY += c * yTemp;
+            }
+            int newY = (int) (sumY/hotspotGewichtung);
+
+            QRgb color = convertYcbcrToRgb(newY, cbTemp, crTemp);
             imageCopy->setPixel(spalte,zeile,color);
         }
     }
 
     imageLabel->setPixmap(QPixmap::fromImage(*imageCopy));
+
 }
+
+
+void ImageViewer::kantePrewitt(){
+    *imageCopy = *image;
+//1. durchgang, original imagegray auf imagecopy geschrieben
+//2. durchgang, werte aus imagecopy verrechnet auf image2 geschrieben
+//3.durchgang , werte aus image2 verrechnet auf image3 geschrieben
+//4.durchgang, werte aus image3 verrechnet auf imageCopy geschrieben
+    //PIXMAP AUS IMAGECOPY
+    std::vector<int> first = {1,1,1} ;
+    std::vector<int> second = {-1,0,1} ;
+
+    int steps = 1;
+
+    for(int spalte = 0; spalte < image->width(); spalte++){
+        for(int zeile = 0; zeile < image->height(); zeile++){
+
+            int sumColor = 0;
+
+
+            for (int s = (-steps); s <= steps; s++){
+                int tempCol = 0;
+
+                if((spalte+s) < 0 || (spalte+s) >= (image->height())) {
+
+                    tempCol = qRed(image->pixel(spalte,zeile));
+
+                }
+
+                else{
+                    tempCol = qRed(image->pixel(spalte+s,zeile));
+
+                }
+                int c = first[s+steps];
+
+                sumColor += c * tempCol;
+
+            }
+            int tempCol = (int) (sumColor/3);
+
+            imageCopy->setPixel(spalte, zeile, qRgb(tempCol,tempCol,tempCol));
+        }
+    }
+
+    QImage * image2 = new QImage(*imageCopy);
+    //2. durchgang, werte aus imagecopy verrechnet auf image2 geschrieben
+    //3.durchgang , werte aus image2 verrechnet auf image3 geschrieben
+    //4.durchgang, werte aus image3 verrechnet auf imageCopy geschrieben
+        //PIXMAP AUS IMAGECOPY
+
+
+    for(int spalte = 0; spalte < image->width(); spalte++){
+        for(int zeile = 0; zeile < image->height(); zeile++){
+
+            int sumColor = 0;
+
+
+            for (int s = (-steps); s <= steps; s++){
+                int tempCol = 0;
+
+                if((zeile+s) < 0 || (zeile+s) >= (image->width())) {
+
+                     tempCol = qRed(imageCopy->pixel(spalte,zeile));
+
+                }
+
+                else{
+                   tempCol = qRed(imageCopy->pixel(spalte,zeile+s));
+
+                }
+
+                int c = second[s+steps];
+
+                sumColor += c * tempCol;
+
+            }
+            int tempCol = (int) (sumColor/2);
+            image2->setPixel(spalte, zeile, qRgb(tempCol,tempCol,tempCol));
+        }
+    }
+    QImage * image3 = new QImage(*image2);
+    //3.durchgang , werte aus image2 verrechnet auf image3 geschrieben
+    //4.durchgang, werte aus image3 verrechnet auf imageCopy geschrieben
+        //PIXMAP AUS IMAGECOPY
+
+    for(int spalte = 0; spalte < image->width(); spalte++){
+        for(int zeile = 0; zeile < image->height(); zeile++){
+
+            int sumColor = 0;
+
+
+            for (int s = (-steps); s <= steps; s++){
+                int tempCol = 0;
+
+                if((zeile+s) < 0 || (zeile+s) >= (image->width())) {
+
+                     tempCol = qRed(image2->pixel(spalte,zeile));
+
+                }
+
+                else{
+                   tempCol = qRed(image2->pixel(spalte,zeile+s));
+
+                }
+
+                int c = first[s+steps];
+
+                sumColor += c * tempCol;
+
+            }
+            int tempCol = (int) (sumColor/3);
+            image3->setPixel(spalte, zeile, qRgb(tempCol,tempCol,tempCol));
+        }
+    }
+
+    for(int spalte = 0; spalte < image->width(); spalte++){
+        for(int zeile = 0; zeile < image->height(); zeile++){
+
+            int sumColor = 0;
+
+
+            for (int s = (-steps); s <= steps; s++){
+                int tempCol = 0;
+
+                if((spalte+s) < 0 || (spalte+s) >= (image->height())) {
+
+                    tempCol = qRed(image3->pixel(spalte,zeile));
+
+                }
+
+                else{
+                    tempCol = qRed(image3->pixel(spalte+s,zeile));
+
+                }
+                int c = second[s+steps];
+
+                sumColor += c * tempCol;
+
+            }
+            int tempCol = (int) (sumColor/2);
+
+            imageCopy->setPixel(spalte, zeile, qRgb(tempCol,tempCol,tempCol));
+        }
+    }
+
+    imageLabel->setPixmap(QPixmap::fromImage(*imageCopy));
+}
+
+
+
+
+
+
+
+
+
+    void ImageViewer::sobel(){
+
+    *imageCopy = *image;
+
+    int arr1[3][3] = {{-1,0,1},{-2,0,2},{-1,0,1}};
+
+    int arr2[3][3] = {{-1,-2,-1},{0,0,0},{1,2,1}};
+
+
+    for (int zeile = 0; zeile < image->height(); zeile++){
+        for (int spalte = 1; spalte < image->width(); spalte++){
+
+            int sum1 = 0;
+            int sum2 = 0;
+            int addWert = 0;
+
+
+            for (int zeileArr = 0; zeileArr <= 2; zeileArr++){
+                for(int spalteArr = 0; spalteArr <= 2 ; spalteArr++){
+
+                    if((zeile -1 <0) || (zeile >= image->height()) || (spalte -1 <0) || (spalte >= image->width()) ){
+                        addWert =qRed(image->pixel(spalte, zeile));
+                    }
+
+                    else if(zeileArr == 0){
+                        if (spalteArr == 0){addWert = qRed(image->pixel(spalte-1, zeile-1)); } //spalte ist x, zeiel ist y
+                        else if(spalteArr ==1){addWert = qRed(image->pixel(spalte, zeile-1));}
+                        else if(spalteArr == 2){addWert = qRed(image->pixel(spalte+1, zeile-1));}
+                     }
+
+                    else if(zeileArr == 1){
+                        if (spalteArr == 0){addWert = qRed(image->pixel(spalte-1, zeile)); } //spalte ist x, zeiel ist y
+                        else if(spalteArr ==1){addWert = qRed(image->pixel(spalte, zeile));}
+                        else if(spalteArr == 2){addWert = qRed(image->pixel(spalte+1, zeile));}
+                    }
+
+                    else if(zeileArr == 2){
+                        if (spalteArr == 0){addWert = qRed(image->pixel(spalte-1, zeile+1)); } //spalte ist x, zeiel ist y
+                        else if(spalteArr ==1){addWert = qRed(image->pixel(spalte, zeile+1));}
+                        else if(spalteArr == 2){addWert = qRed(image->pixel(spalte+1, zeile+1));}
+                    }
+
+                        int a1 = arr1[zeileArr][spalteArr];
+                        int a2 = arr2[zeileArr][spalteArr];
+
+                        sum1 += a1 * addWert;
+                        sum2 += a2 * addWert;
+
+                }
+            }
+            int mittelung = std::sqrt((sum1*sum1) + (sum2*sum2));
+            int richtung = std::atan2(sum1, sum2);
+
+            imageCopy->setPixel(spalte, zeile, qRgb(mittelung,mittelung,mittelung));
+        }
+    }
+    imageLabel->setPixmap(QPixmap::fromImage(*imageCopy));
+    }
+
+
+
+
+
+
+void ImageViewer::cannyEdge(){
+    *imageCopy = *image;
+    doubleDGaussCanny();
+    sobel();
+}
+
+
+
+
+
+
+
+
 
 void ImageViewer::generateControlPanels()
 {
@@ -1393,9 +1710,16 @@ void ImageViewer::generateControlPanels()
     sliderCross->setTickPosition(QSlider::TicksBelow);
     sliderCross->setTickInterval(1);
 
+
+    deleteCrossButton = new QPushButton();
+    deleteCrossButton->setText("Kreuz entfernen");
+    QObject::connect(deleteCrossButton, SIGNAL (clicked()), this, SLOT (deleteCross()));
+
     QObject::connect(sliderCross, SIGNAL(valueChanged(int)),this,SLOT(applyCross(int)));
 
+
     m_option_layout1->addWidget(sliderCross);
+    m_option_layout1->addWidget(deleteCrossButton);
 
     tabWidget->addTab(m_option_panel1,"Aufgabenblatt 1");
 
@@ -1405,10 +1729,8 @@ void ImageViewer::generateControlPanels()
     m_option_panel2 = new QWidget();
     m_option_layout2 = new QVBoxLayout();
     m_option_panel2->setLayout(m_option_layout2);
-
-    buttonMittlereHelligkeit = new QPushButton();
-    buttonMittlereHelligkeit ->setText("Mittlere Helligkeit");
-    QObject::connect(buttonMittlereHelligkeit, SIGNAL (clicked()), this, SLOT (averageBrightness()));
+    m_option_layout2->setSpacing(0);
+    m_option_layout2->setContentsMargins(0,0,0,0);
 
     buttonVarianz = new QPushButton();
     buttonVarianz ->setText("Varianz");
@@ -1417,10 +1739,6 @@ void ImageViewer::generateControlPanels()
 
     labelMiddleBrightness = new QLabel();
     labelVarianz = new QLabel();
-
-    buttonGray = new QPushButton();
-    buttonGray->setText("Graustufen");
-    QObject::connect(buttonGray, SIGNAL (clicked()), this, SLOT (convertToGrayscale()));
 
     buttonHistogram = new QPushButton();
     buttonHistogram->setText("Draw Histogram");
@@ -1456,16 +1774,16 @@ void ImageViewer::generateControlPanels()
     autoKontrastSlider->setToolTip("Autokontrastslider");
     connect(autoKontrastSlider, SIGNAL(valueChanged(int)),this, SLOT(autoKontrast(int)));
 
-    m_option_layout2->addWidget(buttonGray);
-    m_option_layout2->addWidget(sliderBit);
+
     //m_option_layout2->addWidget(labelSliderTick);
-    m_option_layout2->addWidget(buttonHistogram);
+
     m_option_layout2->addWidget(meinHistogram);
-    m_option_layout2->addWidget(sliderBright);
-    m_option_layout2->addWidget(buttonMittlereHelligkeit);
     m_option_layout2->addWidget(labelMiddleBrightness);
-    m_option_layout2->addWidget(buttonVarianz);
     m_option_layout2->addWidget(labelVarianz);
+    m_option_layout2->addWidget(buttonVarianz);
+    m_option_layout2->addWidget(buttonHistogram);
+    m_option_layout2->addWidget(sliderBit);
+    m_option_layout2->addWidget(sliderBright);
     m_option_layout2->addWidget(sliderKontrast);
     m_option_layout2->addWidget(autoKontrastSlider);
 
@@ -1552,7 +1870,11 @@ void ImageViewer::generateControlPanels()
     linearFilterReflectionButton->setText("linearFilterReflectionButton");
     QObject::connect(linearFilterReflectionButton, SIGNAL (clicked()), this, SLOT (linearFilterReflectionPadding()));
 
+    gaussFilterButton = new QPushButton();
+    gaussFilterButton->setText("Gauss2DButton");
+    QObject::connect(gaussFilterButton, SIGNAL (clicked()), this, SLOT (doubleDGauss()));
 
+    sigmaInput = new QLineEdit();
 
 
 
@@ -1574,28 +1896,43 @@ void ImageViewer::generateControlPanels()
     m_option_layout3->addWidget(linearFilterKonstButton);
     m_option_layout3->addWidget(linearFilterReflectionButton);
 
+    m_option_layout3->addWidget(sigmaInput);
+    m_option_layout3->addWidget(gaussFilterButton);
 
     tabWidget->addTab(m_option_panel3,"Aufgabenblatt 3");
 
-    //****************************************TAB 4, GAUSS************************************************//
+    //****************************************ÜBUNG 4************************************************//
     m_option_panel4 = new QWidget();
     m_option_layout4 = new QVBoxLayout();
     m_option_panel4 ->setLayout(m_option_layout4);
 
-    gaussFilterButton = new QPushButton();
-    gaussFilterButton->setText("Gauss2DButton");
-    QObject::connect(gaussFilterButton, SIGNAL (clicked()), this, SLOT (doubleDGauss()));
 
-    sigmaInput = new QLineEdit();
+    prewittButton = new QPushButton();
+    prewittButton->setText("Prewitt");
+    QObject::connect(prewittButton, SIGNAL (clicked()), this, SLOT (kantePrewitt()));
 
-    m_option_layout4->addWidget(sigmaInput);
-    m_option_layout4->addWidget(gaussFilterButton);
+ sobelButton = new QPushButton();
+ sobelButton->setText("Sobel");
+    QObject::connect(sobelButton, SIGNAL (clicked()), this, SLOT (sobel()));
 
-    tabWidget->addTab(m_option_panel4,"Aufgabenblatt 3d)");
+    cannyEdgeButton = new QPushButton();
+    cannyEdgeButton->setText("canny Edge");
+    QObject::connect(cannyEdgeButton, SIGNAL (clicked()), this, SLOT (cannyEdge()));
+
+    m_option_layout4->addWidget(prewittButton);
+    m_option_layout4->addWidget(sobelButton);
+    m_option_layout4->addWidget(cannyEdgeButton);
+
+
+    tabWidget->addTab(m_option_panel4,"Aufgabenblatt 4");
 
 
 
     // Hinweis: Es bietet sich an pro Aufgabe jeweils einen solchen Tab zu erstellen
+
+
+
+
 
 }
 
@@ -1733,6 +2070,7 @@ bool ImageViewer::loadFile(const QString &fileName)
     setWindowFilePath(fileName);
     logFile << "geladen: " << fileName.toStdString().c_str()  << std::endl;
     createImageColor();
+    createImageBlackCopy();
     renewLogging();
 
 

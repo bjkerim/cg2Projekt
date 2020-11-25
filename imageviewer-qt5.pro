@@ -16,3 +16,5 @@ INSTALLS += target
 wince*: {
    DEPLOYMENT_PLUGIN += qjpeg qgif
 }
+
+FORMS +=

@@ -82,16 +82,20 @@ private:
     QVBoxLayout* m_option_layout4;
 
 
+
+
     QPushButton* button1;
     QPushButton* button2;
     QPushButton* button3;
     QPushButton* colorHistgoramButton;
-    QPushButton* buttonMittlereHelligkeit;
+    QPushButton* deleteCrossButton;
     QPushButton* buttonVarianz;
     QPushButton* buttonContrast;
     QPushButton* buttonGray;
     QPushButton* buttonHistogram;
     QPushButton* linearFilterButton;
+    QPushButton*  prewittButton;
+    QPushButton*  cannyEdgeButton;
     QSlider* sliderCross;
     QSlider* slider2;
     QSlider* sliderBright;
@@ -116,6 +120,7 @@ private:
     QPushButton* linearFilterReflectionButton;
     QLineEdit* sigmaInput;
     QPushButton * gaussFilterButton;
+    QPushButton* sobelButton;
 
 
     // hier können weitere GUI Objekte hin wie Buttons Slider etc.
@@ -153,6 +158,11 @@ private slots:
     void linearFilterKonstPadding();
     void linearFilterReflectionPadding();
     void doubleDGauss();
+    void sobel();
+    void doubleDGaussCanny();
+    void cannyEdge();
+    void deleteCross();
+    void kantePrewitt();
 
 
 
