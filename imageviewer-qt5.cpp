@@ -232,7 +232,7 @@ void ImageViewer::averageBrightness(){
 void ImageViewer::varianz(){
 
     if(imageGray!=NULL){
-        *imageGray = *image;
+
         int w = image->width();
         int h = image->height();
 
@@ -261,7 +261,7 @@ void ImageViewer::varianz(){
             for(int j = 0; j < h; j++ ){
                 brightnessSum = qRed(imageGray->pixel(i,j)); // Dieser Pixel hat die Helligkeit 30;
                 tempBright = brightnessSum - averageBrightness; // tempBright = 30-250; --> -220
-                 tempRes = tempRes +(tempBright*tempBright); // 0 + (-220*-220) = + 1000;
+                tempRes = tempRes +(tempBright*tempBright); // 0 + (-220*-220) = + 1000;
 
             }
         }
@@ -297,10 +297,10 @@ void ImageViewer::bitDynamik(int bits){
             }
         }
         imageLabel->setPixmap(QPixmap::fromImage(*imageGray));
-
+        histogram();
+        averageBrightness();
     }
-    histogram();
-    averageBrightness();
+   varianz();
 
 
 }
@@ -424,120 +424,120 @@ void ImageViewer::histogramColor() {
     if (image !=NULL){
 
 
-    myHistogramColor = new QImage(256, 100, QImage::Format_RGB32);
-    myHistogramColor->fill(Qt::black);
+        myHistogramColor = new QImage(256, 100, QImage::Format_RGB32);
+        myHistogramColor->fill(Qt::black);
 
 
-    int myArrayRed[256]= {0};
-    int myArrayGreen[256]= {0};
-    int myArrayBlue[256]= {0};
-    int myValue = 0;
+        int myArrayRed[256]= {0};
+        int myArrayGreen[256]= {0};
+        int myArrayBlue[256]= {0};
+        int myValue = 0;
 
 
-    for (int i = 0; i<image->width() ;i++) {
-        for (int j = 0; j<image->height(); j++){
-            myValue = qRed(imageCopy->pixel(i,j));
-            myArrayRed[myValue] += 1;
+        for (int i = 0; i<image->width() ;i++) {
+            for (int j = 0; j<image->height(); j++){
+                myValue = qRed(imageCopy->pixel(i,j));
+                myArrayRed[myValue] += 1;
 
 
-            myValue = qGreen(imageCopy->pixel(i,j));
-            myArrayGreen[myValue] += 1;
+                myValue = qGreen(imageCopy->pixel(i,j));
+                myArrayGreen[myValue] += 1;
 
-            myValue = qBlue(imageCopy->pixel(i,j));
-            myArrayBlue[myValue] += 1;
-
-        }
-    }
-
-
-    int greatestNumber = 0;
-
-    for(int c = 0; c<256; c++){
-        if (myArrayRed[c] > greatestNumber){
-            greatestNumber = myArrayRed[c];
-
-        }
-
-        else if(myArrayGreen[c] > greatestNumber){
-            greatestNumber = myArrayGreen[c];
-
-        }
-        else if(myArrayBlue[c] > greatestNumber){
-            greatestNumber = myArrayBlue[c];
-
-        }
-
-    }
-
-
-
-    int endWertRed[256] = {0};
-    for (int k = 0; k<256 ;k++){
-        endWertRed[k] = (myArrayRed[k]/(greatestNumber/100));
-
-    }
-
-    int endWertGreen[256] = {0};
-    for (int k = 0; k<256 ;k++){
-        endWertGreen[k] = (myArrayGreen[k]/(greatestNumber/100));
-
-    }
-
-    int endWertBlue[256] = {0};
-    for (int k = 0; k<256 ;k++){
-        endWertBlue[k] = (myArrayBlue[k]/(greatestNumber/100));
-
-    }
-
-
-    for (int z = 0; z<256; z++){
-        for (int h=0; h<(endWertRed[z]); h++){
-            myHistogramColor->setPixelColor(z,h, Qt::red);
-        }
-    }
-
-    for (int z = 0; z<256; z++){
-        for (int h=0; h<(endWertGreen[z]); h++){
-            //rot abfragen wenn mit grün gepainted wird
-            if(qRed(myHistogramColor->pixel(z,h)) == 255 ){
-                myHistogramColor->setPixelColor(z,h, Qt::yellow);
-            }
-
-            else {
-                myHistogramColor->setPixelColor(z,h, Qt::green);
-            }
-        }
-    }
-
-    for (int z = 0; z<256; z++){
-        for (int h=0; h<(endWertBlue[z]); h++){
-
-            if((qRed(myHistogramColor->pixel(z,h)) == 255) && (qGreen(myHistogramColor->pixel(z,h)) == 0)){ //rot prüfen und magenta overpainten
-                myHistogramColor->setPixelColor(z,h, Qt::magenta);
-            }
-
-            else if((qRed(myHistogramColor->pixel(z,h)) == 0) && (qGreen(myHistogramColor->pixel(z,h)) == 255)){ //grün prüfen und cyan drüberballern
-                myHistogramColor->setPixelColor(z,h, Qt::cyan);
+                myValue = qBlue(imageCopy->pixel(i,j));
+                myArrayBlue[myValue] += 1;
 
             }
-            else if((qRed(myHistogramColor->pixel(z,h)) == 255) && (qGreen(myHistogramColor->pixel(z,h)) == 255)){
-                myHistogramColor->setPixelColor(z,h, Qt::gray);
+        }
+
+
+        int greatestNumber = 0;
+
+        for(int c = 0; c<256; c++){
+            if (myArrayRed[c] > greatestNumber){
+                greatestNumber = myArrayRed[c];
 
             }
 
-            else{
-                myHistogramColor->setPixelColor(z,h, Qt::blue);
+            else if(myArrayGreen[c] > greatestNumber){
+                greatestNumber = myArrayGreen[c];
+
+            }
+            else if(myArrayBlue[c] > greatestNumber){
+                greatestNumber = myArrayBlue[c];
+
             }
 
+        }
+
+
+
+        int endWertRed[256] = {0};
+        for (int k = 0; k<256 ;k++){
+            endWertRed[k] = (myArrayRed[k]/(greatestNumber/100));
 
         }
+
+        int endWertGreen[256] = {0};
+        for (int k = 0; k<256 ;k++){
+            endWertGreen[k] = (myArrayGreen[k]/(greatestNumber/100));
+
+        }
+
+        int endWertBlue[256] = {0};
+        for (int k = 0; k<256 ;k++){
+            endWertBlue[k] = (myArrayBlue[k]/(greatestNumber/100));
+
+        }
+
+
+        for (int z = 0; z<256; z++){
+            for (int h=0; h<(endWertRed[z]); h++){
+                myHistogramColor->setPixelColor(z,h, Qt::red);
+            }
+        }
+
+        for (int z = 0; z<256; z++){
+            for (int h=0; h<(endWertGreen[z]); h++){
+                //rot abfragen wenn mit grün gepainted wird
+                if(qRed(myHistogramColor->pixel(z,h)) == 255 ){
+                    myHistogramColor->setPixelColor(z,h, Qt::yellow);
+                }
+
+                else {
+                    myHistogramColor->setPixelColor(z,h, Qt::green);
+                }
+            }
+        }
+
+        for (int z = 0; z<256; z++){
+            for (int h=0; h<(endWertBlue[z]); h++){
+
+                if((qRed(myHistogramColor->pixel(z,h)) == 255) && (qGreen(myHistogramColor->pixel(z,h)) == 0)){ //rot prüfen und magenta overpainten
+                    myHistogramColor->setPixelColor(z,h, Qt::magenta);
+                }
+
+                else if((qRed(myHistogramColor->pixel(z,h)) == 0) && (qGreen(myHistogramColor->pixel(z,h)) == 255)){ //grün prüfen und cyan drüberballern
+                    myHistogramColor->setPixelColor(z,h, Qt::cyan);
+
+                }
+                else if((qRed(myHistogramColor->pixel(z,h)) == 255) && (qGreen(myHistogramColor->pixel(z,h)) == 255)){
+                    myHistogramColor->setPixelColor(z,h, Qt::gray);
+
+                }
+
+                else{
+                    myHistogramColor->setPixelColor(z,h, Qt::blue);
+                }
+
+
+            }
+        }
+
+        QImage mirrorImage  = myHistogramColor->mirrored(false,true);
+        myHistogramColorLabel->setPixmap(QPixmap::fromImage(mirrorImage));
+        myHistogramColorLabel->show();
+
     }
-
-    QImage mirrorImage  = myHistogramColor->mirrored(false,true);
-    myHistogramColorLabel->setPixmap(QPixmap::fromImage(mirrorImage));
-    myHistogramColorLabel->show();
-
-}
 }
 
 /*******************************************************************/
@@ -569,9 +569,11 @@ void ImageViewer::helligkeit(int helligkeitswert) {
         }
 
         imageLabel->setPixmap(QPixmap::fromImage(*imageGray));
+
         averageBrightness();
         histogram();
-    }}
+    }varianz();
+}
 
 /*************************************************************************/
 
@@ -691,9 +693,10 @@ void ImageViewer::kontrast(int konstante) {
 
         /* logFile << "High: " << high << " " << "low: " <<low<< std::endl;*/
         renewLogging();
-    }
-    averageBrightness();
-    histogram();
+        averageBrightness();
+        histogram();
+    }varianz();
+
 }
 /*******************************************************/
 void ImageViewer::kontrastColor(int konstante) {
@@ -868,10 +871,10 @@ void ImageViewer::autoKontrast(int kontrastWert) {
             }
 
         }    imageLabel->setPixmap(QPixmap::fromImage(*imageGray));
+        averageBrightness();
 
-    }
-    averageBrightness();
-    histogram();
+    }histogram();
+    varianz();
 }
 
 /***********************************************************************************************************/
@@ -1008,363 +1011,363 @@ void ImageViewer::generateFilterTable(){
 
 void ImageViewer::linearFilter(){
     if (image !=NULL && getLinearXValue()!=NULL){
-    *imageCopy = *image;
+        *imageCopy = *image;
 
-    int filterKoeffSum = 0;
-    int filterArrayWidth = getLinearXValue();
-    int filterArrayHeight = getLinearYValue();
+        int filterKoeffSum = 0;
+        int filterArrayWidth = getLinearXValue();
+        int filterArrayHeight = getLinearYValue();
 
-    //erstelle 2D int array um unsere gewichtungen einzutragen
-    //int filterArray[filterArrayWidth][filterArrayHeight];
+        //erstelle 2D int array um unsere gewichtungen einzutragen
+        //int filterArray[filterArrayWidth][filterArrayHeight];
 
-    for(int i = 0; i < filterArrayWidth; ++i){
-        for(int j = 0; j < filterArrayHeight; ++j){
-            filterKoeffSum += linearFilterTable->item(j, i)->text().toInt();
-        }
-    }
-
-    double sEinzelGewichtung = 1.0/filterKoeffSum;
-
-    //schritte um den hotspot-pixel herum
-    int LHotspotY = filterArrayHeight/2;
-    int KHotspotx = filterArrayWidth/2;
-
-    for (int v = LHotspotY; v <= (image->height() - LHotspotY - 1); v++){ //Lässt den Rand frei
-        for (int u = KHotspotx; u <= (image->width() - KHotspotx -1); u++){
-            //int yTemp = 0;
-            int cbTemp = 128+((qRed(image->pixel(v,u)) * -0.169) + (qGreen(image->pixel(v,u))* -0.331) + (qBlue(image->pixel(v,u))*0.5));
-            int crTemp = 128+((qRed(image->pixel(v,u)) * 0.5) + (qGreen(image->pixel(v,u))* -0.419) + (qBlue(image->pixel(v,u))*-0.081));
-
-
-            int sum = 0;
-            // j für schritte entlang der y achse, i für schritte entlang der x achse
-
-            for (int j= (-LHotspotY); j <= LHotspotY; j++){
-                for(int i =(-KHotspotx); i <= KHotspotx ; i++){
-
-                    int yTemp = getYfromRGB(image->pixel(v+i, u+j));
-                    int c = linearFilterTable->item((j + LHotspotY),(i + KHotspotx))->text().toInt();
-
-                    sum += c * yTemp;
-
-                }
+        for(int i = 0; i < filterArrayWidth; ++i){
+            for(int j = 0; j < filterArrayHeight; ++j){
+                filterKoeffSum += linearFilterTable->item(j, i)->text().toInt();
             }
-            int newY = (int) ((sEinzelGewichtung* sum) + 0.5);
-
-
-            QRgb color = convertYcbcrToRgb(newY, cbTemp, crTemp);
-
-            imageCopy->setPixel(v, u, color);
         }
 
-    }
-    imageLabel->setPixmap(QPixmap::fromImage(*imageCopy));
+        double sEinzelGewichtung = 1.0/filterKoeffSum;
 
-}}
+        //schritte um den hotspot-pixel herum
+        int LHotspotY = filterArrayHeight/2;
+        int KHotspotx = filterArrayWidth/2;
+
+        for (int v = LHotspotY; v <= (image->height() - LHotspotY - 1); v++){ //Lässt den Rand frei
+            for (int u = KHotspotx; u <= (image->width() - KHotspotx -1); u++){
+                //int yTemp = 0;
+                int cbTemp = 128+((qRed(image->pixel(v,u)) * -0.169) + (qGreen(image->pixel(v,u))* -0.331) + (qBlue(image->pixel(v,u))*0.5));
+                int crTemp = 128+((qRed(image->pixel(v,u)) * 0.5) + (qGreen(image->pixel(v,u))* -0.419) + (qBlue(image->pixel(v,u))*-0.081));
+
+
+                int sum = 0;
+                // j für schritte entlang der y achse, i für schritte entlang der x achse
+
+                for (int j= (-LHotspotY); j <= LHotspotY; j++){
+                    for(int i =(-KHotspotx); i <= KHotspotx ; i++){
+
+                        int yTemp = getYfromRGB(image->pixel(v+i, u+j));
+                        int c = linearFilterTable->item((j + LHotspotY),(i + KHotspotx))->text().toInt();
+
+                        sum += c * yTemp;
+
+                    }
+                }
+                int newY = (int) ((sEinzelGewichtung* sum) + 0.5);
+
+
+                QRgb color = convertYcbcrToRgb(newY, cbTemp, crTemp);
+
+                imageCopy->setPixel(v, u, color);
+            }
+
+        }
+        imageLabel->setPixmap(QPixmap::fromImage(*imageCopy));
+
+    }}
 
 void ImageViewer::linearFilterZeroPadding(){
- if (image !=NULL && getLinearXValue()!=NULL){
-    *imageCopy = *image;
+    if (image !=NULL && getLinearXValue()!=NULL){
+        *imageCopy = *image;
 
-    int filterKoeffSum = 0;
-    int filterArrayWidth = getLinearXValue();
-    int filterArrayHeight = getLinearYValue();
+        int filterKoeffSum = 0;
+        int filterArrayWidth = getLinearXValue();
+        int filterArrayHeight = getLinearYValue();
 
-    //erstelle 2D int array um unsere gewichtungen einzutragen
-    //int filterArray[filterArrayWidth][filterArrayHeight];
+        //erstelle 2D int array um unsere gewichtungen einzutragen
+        //int filterArray[filterArrayWidth][filterArrayHeight];
 
-    for(int i = 0; i < filterArrayWidth; ++i){
-        for(int j = 0; j < filterArrayHeight; ++j){
-            filterKoeffSum += linearFilterTable->item(j, i)->text().toInt();
-        }
-    }
-
-    double sEinzelGewichtung = 1.0/filterKoeffSum;
-
-    //schritte um den hotspot-pixel herum
-    int LHotspotY = filterArrayHeight/2;
-    int KHotspotx = filterArrayWidth/2;
-
-    for (int v = 0; v < image->height(); v++){
-        for (int u = 0; u < image->width(); u++){
-
-            int cbTemp = 128+((qRed(image->pixel(v,u)) * -0.169) + (qGreen(image->pixel(v,u))* -0.331) + (qBlue(image->pixel(v,u))*0.5));
-            int crTemp = 128+((qRed(image->pixel(v,u)) * 0.5) + (qGreen(image->pixel(v,u))* -0.419) + (qBlue(image->pixel(v,u))*-0.081));
-
-
-            int sum = 0;
-            // j für schritte entlang der y achse, i für schritte entlang der x achse
-            //mini matrix um den Hotspot herum
-
-            for (int j = (-LHotspotY); j <= LHotspotY; j++){
-                for(int i = (-KHotspotx); i <= KHotspotx ; i++){
-                    int yTemp = 0;
-
-
-                    if((v+j) < 0 || (v+j) > (image->height()-1)  || (u+i) < 0 || (u+i) > (image->width()-1)) {
-
-                        yTemp = getYfromRGB(127);
-                    }
-
-                    else{
-                        yTemp = getYfromRGB(image->pixel(v+j, u+i));
-
-                    }
-
-
-                    int c = linearFilterTable->item((j + LHotspotY),(i + KHotspotx))->text().toInt();
-
-                    sum += c * yTemp;
-
-                }
+        for(int i = 0; i < filterArrayWidth; ++i){
+            for(int j = 0; j < filterArrayHeight; ++j){
+                filterKoeffSum += linearFilterTable->item(j, i)->text().toInt();
             }
-            int newY = (int) ((sEinzelGewichtung* sum) + 0.5);
-
-
-            QRgb color = convertYcbcrToRgb(newY, cbTemp, crTemp);
-
-            imageCopy->setPixel(v, u, color);
         }
-    }
-    imageLabel->setPixmap(QPixmap::fromImage(*imageCopy));
-}}
+
+        double sEinzelGewichtung = 1.0/filterKoeffSum;
+
+        //schritte um den hotspot-pixel herum
+        int LHotspotY = filterArrayHeight/2;
+        int KHotspotx = filterArrayWidth/2;
+
+        for (int v = 0; v < image->height(); v++){
+            for (int u = 0; u < image->width(); u++){
+
+                int cbTemp = 128+((qRed(image->pixel(v,u)) * -0.169) + (qGreen(image->pixel(v,u))* -0.331) + (qBlue(image->pixel(v,u))*0.5));
+                int crTemp = 128+((qRed(image->pixel(v,u)) * 0.5) + (qGreen(image->pixel(v,u))* -0.419) + (qBlue(image->pixel(v,u))*-0.081));
+
+
+                int sum = 0;
+                // j für schritte entlang der y achse, i für schritte entlang der x achse
+                //mini matrix um den Hotspot herum
+
+                for (int j = (-LHotspotY); j <= LHotspotY; j++){
+                    for(int i = (-KHotspotx); i <= KHotspotx ; i++){
+                        int yTemp = 0;
+
+
+                        if((v+j) < 0 || (v+j) > (image->height()-1)  || (u+i) < 0 || (u+i) > (image->width()-1)) {
+
+                            yTemp = getYfromRGB(127);
+                        }
+
+                        else{
+                            yTemp = getYfromRGB(image->pixel(v+j, u+i));
+
+                        }
+
+
+                        int c = linearFilterTable->item((j + LHotspotY),(i + KHotspotx))->text().toInt();
+
+                        sum += c * yTemp;
+
+                    }
+                }
+                int newY = (int) ((sEinzelGewichtung* sum) + 0.5);
+
+
+                QRgb color = convertYcbcrToRgb(newY, cbTemp, crTemp);
+
+                imageCopy->setPixel(v, u, color);
+            }
+        }
+        imageLabel->setPixmap(QPixmap::fromImage(*imageCopy));
+    }}
 
 void ImageViewer::linearFilterKonstPadding(){
- if (image !=NULL && getLinearXValue()!=NULL){
-    *imageCopy = *image;
+    if (image !=NULL && getLinearXValue()!=NULL){
+        *imageCopy = *image;
 
-    int filterKoeffSum = 0;
-    int filterArrayWidth = getLinearXValue();
-    int filterArrayHeight = getLinearYValue();
+        int filterKoeffSum = 0;
+        int filterArrayWidth = getLinearXValue();
+        int filterArrayHeight = getLinearYValue();
 
-    //erstelle 2D int array um unsere gewichtungen einzutragen
-    //int filterArray[filterArrayWidth][filterArrayHeight];
+        //erstelle 2D int array um unsere gewichtungen einzutragen
+        //int filterArray[filterArrayWidth][filterArrayHeight];
 
-    for(int i = 0; i < filterArrayWidth; ++i){
-        for(int j = 0; j < filterArrayHeight; ++j){
-            filterKoeffSum += linearFilterTable->item(j, i)->text().toInt();
-        }
-    }
-
-    double sHotspotGewichtung = 1.0/filterKoeffSum;
-
-    //schritte um den hotspot-pixel herum
-    int LHotspotY = filterArrayHeight/2;
-    int KHotspotx = filterArrayWidth/2;
-
-    for (int v = 0; v < image->height(); v++){ //Lässt den Rand frei
-        for (int u = 0; u < image->width(); u++){
-
-            int cbTemp = 128+((qRed(image->pixel(v,u)) * -0.169) + (qGreen(image->pixel(v,u))* -0.331) + (qBlue(image->pixel(v,u))*0.5));
-            int crTemp = 128+((qRed(image->pixel(v,u)) * 0.5) + (qGreen(image->pixel(v,u))* -0.419) + (qBlue(image->pixel(v,u))*-0.081));
-
-
-            int sum = 0;
-            // j für schritte entlang der y achse, i für schritte entlang der x achse
-            //mini matrix um den Hotspot herum
-
-            for (int j = (-LHotspotY); j <= LHotspotY; j++){
-                for(int i = (-KHotspotx); i <= KHotspotx ; i++){
-                    int yTemp = 0;
-
-
-                    if((v+j) < 0 || (v+j) >= (image->height())  || (u+i) < 0 || (u+i) >= (image->width())) {
-
-                        yTemp = getYfromRGB(image->pixel(v,u));
-                    }
-
-                    else{
-                        yTemp = getYfromRGB(image->pixel(v+j, u+i));
-
-                    }
-
-
-                    int c = linearFilterTable->item((j + LHotspotY),(i + KHotspotx))->text().toInt();
-
-                    sum += c * yTemp;
-
-                }
+        for(int i = 0; i < filterArrayWidth; ++i){
+            for(int j = 0; j < filterArrayHeight; ++j){
+                filterKoeffSum += linearFilterTable->item(j, i)->text().toInt();
             }
-            int newY = (int) ((sHotspotGewichtung* sum) + 0.5);
-
-
-            QRgb color = convertYcbcrToRgb(newY, cbTemp, crTemp);
-
-            imageCopy->setPixel(v, u, color);
         }
+
+        double sHotspotGewichtung = 1.0/filterKoeffSum;
+
+        //schritte um den hotspot-pixel herum
+        int LHotspotY = filterArrayHeight/2;
+        int KHotspotx = filterArrayWidth/2;
+
+        for (int v = 0; v < image->height(); v++){ //Lässt den Rand frei
+            for (int u = 0; u < image->width(); u++){
+
+                int cbTemp = 128+((qRed(image->pixel(v,u)) * -0.169) + (qGreen(image->pixel(v,u))* -0.331) + (qBlue(image->pixel(v,u))*0.5));
+                int crTemp = 128+((qRed(image->pixel(v,u)) * 0.5) + (qGreen(image->pixel(v,u))* -0.419) + (qBlue(image->pixel(v,u))*-0.081));
+
+
+                int sum = 0;
+                // j für schritte entlang der y achse, i für schritte entlang der x achse
+                //mini matrix um den Hotspot herum
+
+                for (int j = (-LHotspotY); j <= LHotspotY; j++){
+                    for(int i = (-KHotspotx); i <= KHotspotx ; i++){
+                        int yTemp = 0;
+
+
+                        if((v+j) < 0 || (v+j) >= (image->height())  || (u+i) < 0 || (u+i) >= (image->width())) {
+
+                            yTemp = getYfromRGB(image->pixel(v,u));
+                        }
+
+                        else{
+                            yTemp = getYfromRGB(image->pixel(v+j, u+i));
+
+                        }
+
+
+                        int c = linearFilterTable->item((j + LHotspotY),(i + KHotspotx))->text().toInt();
+
+                        sum += c * yTemp;
+
+                    }
+                }
+                int newY = (int) ((sHotspotGewichtung* sum) + 0.5);
+
+
+                QRgb color = convertYcbcrToRgb(newY, cbTemp, crTemp);
+
+                imageCopy->setPixel(v, u, color);
+            }
+        }
+        imageLabel->setPixmap(QPixmap::fromImage(*imageCopy));
     }
-    imageLabel->setPixmap(QPixmap::fromImage(*imageCopy));
-}
 }
 
 void ImageViewer::linearFilterReflectionPadding(){
- if (image !=NULL && getLinearXValue()!=NULL){
-    *imageCopy = *image;
+    if (image !=NULL && getLinearXValue()!=NULL){
+        *imageCopy = *image;
 
-    int filterKoeffSum = 0;
-    int filterArrayWidth = getLinearXValue();
-    int filterArrayHeight = getLinearYValue();
+        int filterKoeffSum = 0;
+        int filterArrayWidth = getLinearXValue();
+        int filterArrayHeight = getLinearYValue();
 
-    //erstelle 2D int array um unsere gewichtungen einzutragen
-    //int filterArray[filterArrayWidth][filterArrayHeight];
+        //erstelle 2D int array um unsere gewichtungen einzutragen
+        //int filterArray[filterArrayWidth][filterArrayHeight];
 
-    for(int i = 0; i < filterArrayWidth; ++i){
-        for(int j = 0; j < filterArrayHeight; ++j){
-            filterKoeffSum += linearFilterTable->item(j, i)->text().toInt();
+        for(int i = 0; i < filterArrayWidth; ++i){
+            for(int j = 0; j < filterArrayHeight; ++j){
+                filterKoeffSum += linearFilterTable->item(j, i)->text().toInt();
+            }
         }
-    }
 
-    double sHotspotGewichtung = 1.0/filterKoeffSum;
+        double sHotspotGewichtung = 1.0/filterKoeffSum;
 
-    //schritte um den hotspot-pixel herum
-    int LHotspotY = filterArrayHeight/2;
-    int KHotspotx = filterArrayWidth/2;
+        //schritte um den hotspot-pixel herum
+        int LHotspotY = filterArrayHeight/2;
+        int KHotspotx = filterArrayWidth/2;
 
-    for (int v = 0; v < image->height(); v++){ //Lässt den Rand frei
-        for (int u = 0; u < image->width(); u++){
+        for (int v = 0; v < image->height(); v++){ //Lässt den Rand frei
+            for (int u = 0; u < image->width(); u++){
 
-            int cbTemp = 128+((qRed(image->pixel(v,u)) * -0.169) + (qGreen(image->pixel(v,u))* -0.331) + (qBlue(image->pixel(v,u))*0.5));
-            int crTemp = 128+((qRed(image->pixel(v,u)) * 0.5) + (qGreen(image->pixel(v,u))* -0.419) + (qBlue(image->pixel(v,u))*-0.081));
-
-
-            int sum = 0;
-            // j für schritte entlang der y achse, i für schritte entlang der x achse
-            //mini matrix um den Hotspot herum
-
-            for (int j = (-LHotspotY); j <= LHotspotY; j++){
-                for(int i = (-KHotspotx); i <= KHotspotx ; i++){
-                    int yTemp = 0;
+                int cbTemp = 128+((qRed(image->pixel(v,u)) * -0.169) + (qGreen(image->pixel(v,u))* -0.331) + (qBlue(image->pixel(v,u))*0.5));
+                int crTemp = 128+((qRed(image->pixel(v,u)) * 0.5) + (qGreen(image->pixel(v,u))* -0.419) + (qBlue(image->pixel(v,u))*-0.081));
 
 
-                    if((v+j) < 0 || (v+j) >= (image->height())) {
+                int sum = 0;
+                // j für schritte entlang der y achse, i für schritte entlang der x achse
+                //mini matrix um den Hotspot herum
 
-                        yTemp = getYfromRGB(image->pixel(v-j,u));
+                for (int j = (-LHotspotY); j <= LHotspotY; j++){
+                    for(int i = (-KHotspotx); i <= KHotspotx ; i++){
+                        int yTemp = 0;
+
+
+                        if((v+j) < 0 || (v+j) >= (image->height())) {
+
+                            yTemp = getYfromRGB(image->pixel(v-j,u));
+
+                        }
+                        else if((u+i) < 0 || (u+i) >= (image->width())){
+
+                            yTemp = getYfromRGB(image->pixel(v,u-i));
+                        }
+
+                        else{
+                            yTemp = getYfromRGB(image->pixel(v+j, u+i));
+
+                        }
+
+                        int c = linearFilterTable->item((j + LHotspotY),(i + KHotspotx))->text().toInt();
+
+                        sum += c * yTemp;
 
                     }
-                    else if((u+i) < 0 || (u+i) >= (image->width())){
+                }
+                int newY = (int) ((sHotspotGewichtung* sum) + 0.5);
 
-                        yTemp = getYfromRGB(image->pixel(v,u-i));
+
+                QRgb color = convertYcbcrToRgb(newY, cbTemp, crTemp);
+
+                imageCopy->setPixel(v, u, color);
+            }
+        }
+        imageLabel->setPixmap(QPixmap::fromImage(*imageCopy));
+    }}
+
+void ImageViewer::doubleDGauss(){
+    if (image !=NULL){
+        *imageCopy = *image;
+        float sigma = sigmaInput1->text().toFloat();
+        qDebug()<< "Wert von Sigma" << sigma;
+        int hotspotGewichtung = 0;
+
+        //create the kernel h:
+        int center = (int) ((3.0 * sigma)+0.5);
+
+        std::vector<float> h((2*center)+1); //odd size weil
+
+        int hLength = h.size();
+        int steps = hLength/2;
+
+        //fill the kernel h:
+        double sigmaQuadr = sigma *sigma; //sigma²
+
+        for (int i = 0; i < hLength; i++){ //setzt die index werte in die gauss funktion ein, index verschiebt sich dass mitte des arrays auf null ist. sigma quadrat unverändert über alle schleifen
+            double r = center -i;
+
+            h[i] = ((float) std::exp((-0.5 * (r*r)) / sigmaQuadr)+0.5);
+        }
+
+        for(int g = 0; g < hLength; g++){
+
+            hotspotGewichtung = hotspotGewichtung + h[g];
+        }
+
+        for(int spalte = 0; spalte < image->width(); spalte++){
+            for(int zeile = 0; zeile < image->height(); zeile++){
+
+                int cbTemp = 128+((qRed(image->pixel(spalte,zeile)) * -0.169) + (qGreen(image->pixel(spalte,zeile))* -0.331) + (qBlue(image->pixel(spalte,zeile))*0.5));
+                int crTemp = 128+((qRed(image->pixel(spalte,zeile)) * 0.5) + (qGreen(image->pixel(spalte,zeile))* -0.419) + (qBlue(image->pixel(spalte,zeile))*-0.081));
+                int sumY = 0;
+
+
+                for (int s = (-steps); s <= steps; s++){
+                    int yTemp = 0;
+
+                    if((spalte+s) < 0 || (spalte+s) >= (image->height())) {
+
+                        yTemp = getYfromRGB(image->pixel(spalte,zeile));
+
                     }
 
                     else{
-                        yTemp = getYfromRGB(image->pixel(v+j, u+i));
+                        yTemp = getYfromRGB(image->pixel(spalte+s,zeile));
+
 
                     }
 
-                    int c = linearFilterTable->item((j + LHotspotY),(i + KHotspotx))->text().toInt();
+                    int c = h[s+steps];
 
-                    sum += c * yTemp;
+                    sumY += c * yTemp;
 
                 }
+                int newY = (int) (sumY/hotspotGewichtung);
+
+                QRgb color = convertYcbcrToRgb(newY, cbTemp, crTemp);
+
+                imageCopy->setPixel(spalte,zeile, color);
             }
-            int newY = (int) ((sHotspotGewichtung* sum) + 0.5);
-
-
-            QRgb color = convertYcbcrToRgb(newY, cbTemp, crTemp);
-
-            imageCopy->setPixel(v, u, color);
         }
-    }
-    imageLabel->setPixmap(QPixmap::fromImage(*imageCopy));
-}}
 
-void ImageViewer::doubleDGauss(){
- if (image !=NULL){
-    *imageCopy = *image;
-    float sigma = sigmaInput1->text().toFloat();
-    qDebug()<< "Wert von Sigma" << sigma;
-    int hotspotGewichtung = 0;
+        imageGauss = new QImage(*imageCopy);
+        for(int spalte = 0; spalte < image->width(); spalte++){
+            for(int zeile = 0; zeile < image->height(); zeile++){
 
-    //create the kernel h:
-    int center = (int) ((3.0 * sigma)+0.5);
-
-    std::vector<float> h((2*center)+1); //odd size weil
-
-    int hLength = h.size();
-    int steps = hLength/2;
-
-    //fill the kernel h:
-    double sigmaQuadr = sigma *sigma; //sigma²
-
-    for (int i = 0; i < hLength; i++){ //setzt die index werte in die gauss funktion ein, index verschiebt sich dass mitte des arrays auf null ist. sigma quadrat unverändert über alle schleifen
-        double r = center -i;
-
-        h[i] = ((float) std::exp((-0.5 * (r*r)) / sigmaQuadr)+0.5);
-    }
-
-    for(int g = 0; g < hLength; g++){
-
-        hotspotGewichtung = hotspotGewichtung + h[g];
-    }
-
-    for(int spalte = 0; spalte < image->width(); spalte++){
-        for(int zeile = 0; zeile < image->height(); zeile++){
-
-            int cbTemp = 128+((qRed(image->pixel(spalte,zeile)) * -0.169) + (qGreen(image->pixel(spalte,zeile))* -0.331) + (qBlue(image->pixel(spalte,zeile))*0.5));
-            int crTemp = 128+((qRed(image->pixel(spalte,zeile)) * 0.5) + (qGreen(image->pixel(spalte,zeile))* -0.419) + (qBlue(image->pixel(spalte,zeile))*-0.081));
-            int sumY = 0;
+                int cbTemp = 128+((qRed(image->pixel(spalte,zeile)) * -0.169) + (qGreen(image->pixel(spalte,zeile))* -0.331) + (qBlue(image->pixel(spalte,zeile))*0.5));
+                int crTemp = 128+((qRed(imageGauss->pixel(spalte,zeile)) * 0.5) + (qGreen(imageGauss->pixel(spalte,zeile))* -0.419) + (qBlue(imageGauss->pixel(spalte,zeile))*-0.081));
+                int sumY = 0;
 
 
-            for (int s = (-steps); s <= steps; s++){
-                int yTemp = 0;
+                for (int s = (-steps); s <= steps; s++){
+                    int yTemp = 0;
 
-                if((spalte+s) < 0 || (spalte+s) >= (image->height())) {
+                    if((zeile+s) < 0 || (zeile+s) >= (image->width())) {
+                        yTemp = getYfromRGB(imageGauss->pixel(spalte,zeile));
+                    }
 
-                    yTemp = getYfromRGB(image->pixel(spalte,zeile));
+                    else{
+                        yTemp = getYfromRGB(imageGauss->pixel(spalte,zeile+s));
 
+                    }
+                    int c = h[s+steps];
+                    sumY += c * yTemp;
                 }
+                int newY = (int) (sumY/hotspotGewichtung);
 
-                else{
-                    yTemp = getYfromRGB(image->pixel(spalte+s,zeile));
-
-
-                }
-
-                int c = h[s+steps];
-
-                sumY += c * yTemp;
-
+                QRgb color = convertYcbcrToRgb(newY, cbTemp, crTemp);
+                imageCopy->setPixel(spalte,zeile,color);
             }
-            int newY = (int) (sumY/hotspotGewichtung);
-
-            QRgb color = convertYcbcrToRgb(newY, cbTemp, crTemp);
-
-            imageCopy->setPixel(spalte,zeile, color);
         }
-    }
 
-    imageGauss = new QImage(*imageCopy);
-    for(int spalte = 0; spalte < image->width(); spalte++){
-        for(int zeile = 0; zeile < image->height(); zeile++){
-
-            int cbTemp = 128+((qRed(image->pixel(spalte,zeile)) * -0.169) + (qGreen(image->pixel(spalte,zeile))* -0.331) + (qBlue(image->pixel(spalte,zeile))*0.5));
-            int crTemp = 128+((qRed(imageGauss->pixel(spalte,zeile)) * 0.5) + (qGreen(imageGauss->pixel(spalte,zeile))* -0.419) + (qBlue(imageGauss->pixel(spalte,zeile))*-0.081));
-            int sumY = 0;
-
-
-            for (int s = (-steps); s <= steps; s++){
-                int yTemp = 0;
-
-                if((zeile+s) < 0 || (zeile+s) >= (image->width())) {
-                    yTemp = getYfromRGB(imageGauss->pixel(spalte,zeile));
-                }
-
-                else{
-                    yTemp = getYfromRGB(imageGauss->pixel(spalte,zeile+s));
-
-                }
-                int c = h[s+steps];
-                sumY += c * yTemp;
-            }
-            int newY = (int) (sumY/hotspotGewichtung);
-
-            QRgb color = convertYcbcrToRgb(newY, cbTemp, crTemp);
-            imageCopy->setPixel(spalte,zeile,color);
-        }
-    }
-
-    imageLabel->setPixmap(QPixmap::fromImage(*imageCopy));
-}}
+        imageLabel->setPixmap(QPixmap::fromImage(*imageCopy));
+    }}
 
 
 
@@ -1795,9 +1798,9 @@ void ImageViewer::generateControlPanels()
     m_option_layout3 = new QVBoxLayout();
     m_option_panel3 ->setLayout(m_option_layout3);
 
-     sigmaInput1 = new QLineEdit();
-     sigmaInput1->setText("Bitte einen Wert zwischen 1 und 5 für den Gauß Filter eintragen");
-      sigmaInput = new QLineEdit();
+    sigmaInput1 = new QLineEdit();
+    sigmaInput1->setText("Bitte einen Wert zwischen 1 und 5 für den Gauß Filter eintragen");
+    sigmaInput = new QLineEdit();
 
     QSlider *sliderColorBit = new QSlider(Qt::Horizontal,0);
     sliderColorBit->setRange(1,8);
@@ -1912,18 +1915,18 @@ void ImageViewer::generateControlPanels()
     m_option_layout4->addWidget(linearFilterZeroButton);
     m_option_layout4->addWidget(linearFilterKonstButton);
     m_option_layout4->addWidget(linearFilterReflectionButton);
-  m_option_layout4->addWidget(sigmaInput1);
+    m_option_layout4->addWidget(sigmaInput1);
     m_option_layout4->addWidget(gaussFilterButton);
 
 
 
 
-//     m_option_layout4->addWidget(prewittButton);
+    //     m_option_layout4->addWidget(prewittButton);
 
 
 
 
-     tabWidget->addTab(m_option_panel4,"Aufgabenblatt 3.2");
+    tabWidget->addTab(m_option_panel4,"Aufgabenblatt 3.2");
 
 
     //****************************************ÜBUNG 4************************************************//
