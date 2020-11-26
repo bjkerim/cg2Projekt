@@ -61,6 +61,7 @@ class QPushButton;
 class QSpinBox;
 class QSlider;
 class QTableWidget;
+class QComboBox;
 
 class ImageViewer : public QMainWindow
 {
@@ -80,6 +81,9 @@ private:
 
     QWidget* m_option_panel4;
     QVBoxLayout* m_option_layout4;
+
+    QWidget* m_option_panel5;
+    QVBoxLayout* m_option_layout5;
 
 
 
@@ -106,11 +110,14 @@ private:
     QSlider* sliderColorBit;
     QSlider* autoKontrastColorSlider;
     QSpinBox* spinbox1;
+
     QLabel* labelMiddleBrightness;
     QLabel* labelVarianz;
     QLabel* labelSliderTick;
     QLabel* meinHistogram;
     QLabel* myHistogramColorLabel;
+    QLabel* linearFilterxSliderLabel;
+    QLabel* linearFilterySliderLabel;
     QSlider* yLinearFilterSlider;
     QSlider* xLinearFilterSlider;
     QPushButton* buttonGenerateLinearFilterTable;
@@ -119,6 +126,7 @@ private:
     QPushButton* linearFilterKonstButton;
     QPushButton* linearFilterReflectionButton;
     QLineEdit* sigmaInput;
+        QLineEdit* sigmaInput1;
     QPushButton * gaussFilterButton;
     QPushButton* sobelButton;
 
@@ -162,6 +170,7 @@ private slots:
     void cannyEdge();
     void deleteCross();
     void kantePrewitt();
+
 
 
 

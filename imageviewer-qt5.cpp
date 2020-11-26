@@ -141,13 +141,13 @@ void ImageViewer::createImageBlackCopy() {
 }
 
 
-
 void ImageViewer::applyCross(int kreuzBreite)
 
 {
-    imageCopy = new QImage(*image);
+
     if(image!=NULL)
     {
+        imageCopy = new QImage(*image);
 
         for(int i=0;i<((kreuzBreite*std::min(image->width(), image->height())/ 100) / 2);i++)
         {
@@ -236,12 +236,14 @@ void ImageViewer::varianz(){
         int w = image->width();
         int h = image->height();
 
+
         int averageBrightness;
         int brightnessSumAverage = 0;
         int pixelCount = w*h;
 
         long brightnessSum =0;
         int tempRes = 0;
+        int tempBright = 0;
 
 
         for (int i = 0; i < w; i++){
@@ -251,20 +253,23 @@ void ImageViewer::varianz(){
         }
 
         averageBrightness = (brightnessSumAverage/pixelCount);
+        qDebug()<<"Tempres: " << tempRes;
+
 
 
         for (int i = 0; i < w; i++){
             for(int j = 0; j < h; j++ ){
-                brightnessSum = qRed(imageGray->pixel(i,j)) - averageBrightness;
-                tempRes += (brightnessSum*brightnessSum);
+                brightnessSum = qRed(imageGray->pixel(i,j));
+                tempBright = brightnessSum - averageBrightness;
+                tempRes = tempRes +(tempBright*tempBright);
 
             }
         }
+        qDebug()<<"Tempres: " << tempRes;
 
-        int myVarianz = tempRes/pixelCount;
 
-        brightnessSum = brightnessSum*brightnessSum;
-        labelVarianz->setText("Die Varianz beträgt: " + QString::number(brightnessSum));
+        int myVarianz = tempRes / (h*w);
+        labelVarianz->setText("Die Varianz beträgt: " + QString::number(myVarianz));
         renewLogging();
     }
 }
@@ -320,7 +325,7 @@ void ImageViewer::bitDynamikColor(int bits){
 
         for (int i = 0; i <= w-1; i++){
             for(int j = 0; j <= h-1; j++ ){
-                QRgb color = image->pixel(i,j);
+                QRgb color = imageCopy->pixel(i,j);
                 int y = ((qRed(color) *0.299) + (qGreen(color)* 0.587) + (qBlue(color)*0.114));
                 int cb = 128+((qRed(color) * -0.169) + (qGreen(color)* -0.331) + (qBlue(color)*0.5));
                 int cr = 128+((qRed(color) * 0.5) + (qGreen(color)* -0.419) + (qBlue(color)*-0.081));
@@ -360,6 +365,7 @@ void ImageViewer::bitDynamikColor(int bits){
         }
 
     }
+    histogramColor();
 
 }
 
@@ -416,7 +422,8 @@ void ImageViewer::histogram() {
 /************************************************/
 
 void ImageViewer::histogramColor() {
-    *imageCopy = *image;
+    if (image !=NULL){
+
 
     myHistogramColor = new QImage(256, 100, QImage::Format_RGB32);
     myHistogramColor->fill(Qt::black);
@@ -531,7 +538,7 @@ void ImageViewer::histogramColor() {
     myHistogramColorLabel->setPixmap(QPixmap::fromImage(mirrorImage));
     myHistogramColorLabel->show();
 
-
+}
 }
 
 /*******************************************************************/
@@ -617,6 +624,7 @@ void ImageViewer::helligkeitColor(int helligkeitswert) {
         imageLabel->setPixmap(QPixmap::fromImage(*imageCopy));
 
     }
+    histogramColor();
 
 }
 
@@ -631,12 +639,12 @@ void ImageViewer::kontrast(int konstante) {
         int low = 0;
         int high = 0;
         int mid = 0;
-        low = qRed(image->pixel(0,0));
-        high = qRed(image->pixel(0,0));
+        low = qRed(imageGray->pixel(0,0));
+        high = qRed(imageGray->pixel(0,0));
         for (int i=0; i <w; i++){
             for (int j = 0; j<h; j++){
 
-                int aktuellerWert = qRed(image->pixel(i,j));
+                int aktuellerWert = qRed(imageGray->pixel(i,j));
                 if (aktuellerWert < low){
                     low = aktuellerWert;
                 }
@@ -653,19 +661,16 @@ void ImageViewer::kontrast(int konstante) {
         for (int i=0; i <w; i++){
             for (int j = 0; j<h; j++){
                 int newPixelValue = 0;
-                if (konstante > 0) {
-                    newPixelValue = (((qRed(image->pixel(i,j)) - mid) * konstante)) + 0.5;
+                if (konstante >= 0) {
+                    newPixelValue = (((qRed(imageGray->pixel(i,j)) - mid) * konstante)) + 0.5;
                 }
 
                 else if (konstante < 0) {
 
-                    newPixelValue = (((qRed(image->pixel(i,j)) - mid) / std::abs(konstante))) + 0.5;
+                    newPixelValue = (((qRed(imageGray->pixel(i,j)) - mid) / std::abs(konstante))) + 0.5;
                 }
 
-                else if (konstante == 0) {
-                    imageLabel->setPixmap(QPixmap::fromImage(*imageGray));
 
-                }
                 newPixelValue = newPixelValue + mid;
 
 
@@ -677,13 +682,13 @@ void ImageViewer::kontrast(int konstante) {
                     newPixelValue = 0;
                 }
 
-                imageCopy->setPixel(i, j, qRgb(newPixelValue,newPixelValue,newPixelValue));
+                imageGray->setPixel(i, j, qRgb(newPixelValue,newPixelValue,newPixelValue));
 
             }
         }
 
 
-        imageLabel->setPixmap(QPixmap::fromImage(*imageCopy));
+        imageLabel->setPixmap(QPixmap::fromImage(*imageGray));
 
         /* logFile << "High: " << high << " " << "low: " <<low<< std::endl;*/
         renewLogging();
@@ -778,7 +783,7 @@ void ImageViewer::kontrastColor(int konstante) {
         }
     }
     imageLabel->setPixmap(QPixmap::fromImage(*imageCopy));
-
+    histogramColor();
 
 }
 /************************************************************************/
@@ -864,8 +869,10 @@ void ImageViewer::autoKontrast(int kontrastWert) {
             }
 
         }    imageLabel->setPixmap(QPixmap::fromImage(*imageGray));
-        renewLogging();
+
     }
+    averageBrightness();
+    histogram();
 }
 
 /***********************************************************************************************************/
@@ -978,7 +985,7 @@ void ImageViewer::autoKontrastColor(int kontrastWert) {
 
     }
     imageLabel->setPixmap(QPixmap::fromImage(*imageCopy));
-    renewLogging();
+    histogramColor();
 }
 
 /****************************************************************************************
@@ -1001,7 +1008,7 @@ void ImageViewer::generateFilterTable(){
 
 
 void ImageViewer::linearFilter(){
-
+    if (image !=NULL && getLinearXValue()!=NULL){
     *imageCopy = *image;
 
     int filterKoeffSum = 0;
@@ -1054,10 +1061,10 @@ void ImageViewer::linearFilter(){
     }
     imageLabel->setPixmap(QPixmap::fromImage(*imageCopy));
 
-}
+}}
 
 void ImageViewer::linearFilterZeroPadding(){
-
+ if (image !=NULL && getLinearXValue()!=NULL){
     *imageCopy = *image;
 
     int filterKoeffSum = 0;
@@ -1121,10 +1128,10 @@ void ImageViewer::linearFilterZeroPadding(){
         }
     }
     imageLabel->setPixmap(QPixmap::fromImage(*imageCopy));
-}
+}}
 
 void ImageViewer::linearFilterKonstPadding(){
-
+ if (image !=NULL && getLinearXValue()!=NULL){
     *imageCopy = *image;
 
     int filterKoeffSum = 0;
@@ -1189,10 +1196,10 @@ void ImageViewer::linearFilterKonstPadding(){
     }
     imageLabel->setPixmap(QPixmap::fromImage(*imageCopy));
 }
-
+}
 
 void ImageViewer::linearFilterReflectionPadding(){
-
+ if (image !=NULL && getLinearXValue()!=NULL){
     *imageCopy = *image;
 
     int filterKoeffSum = 0;
@@ -1260,12 +1267,12 @@ void ImageViewer::linearFilterReflectionPadding(){
         }
     }
     imageLabel->setPixmap(QPixmap::fromImage(*imageCopy));
-}
+}}
 
 void ImageViewer::doubleDGauss(){
-
+ if (image !=NULL){
     *imageCopy = *image;
-    float sigma = sigmaInput->text().toFloat();
+    float sigma = sigmaInput1->text().toFloat();
     qDebug()<< "Wert von Sigma" << sigma;
     int hotspotGewichtung = 0;
 
@@ -1358,7 +1365,7 @@ void ImageViewer::doubleDGauss(){
     }
 
     imageLabel->setPixmap(QPixmap::fromImage(*imageCopy));
-}
+}}
 
 
 
@@ -1789,6 +1796,10 @@ void ImageViewer::generateControlPanels()
     m_option_layout3 = new QVBoxLayout();
     m_option_panel3 ->setLayout(m_option_layout3);
 
+     sigmaInput1 = new QLineEdit();
+     sigmaInput1->setText("Bitte einen Wert zwischen 1 und 5 für den Gauß Filter eintragen");
+      sigmaInput = new QLineEdit();
+
     QSlider *sliderColorBit = new QSlider(Qt::Horizontal,0);
     sliderColorBit->setRange(1,8);
     sliderColorBit->setTickPosition(QSlider::TicksBelow);
@@ -1817,12 +1828,20 @@ void ImageViewer::generateControlPanels()
     autoKontrastColorSlider->setToolTip("Autokontrastslider Farbe");
     connect(autoKontrastColorSlider, SIGNAL(valueChanged(int)),this, SLOT(autoKontrastColor(int)));
 
+    linearFilterxSliderLabel = new QLabel(this);
+    linearFilterxSliderLabel->setText("Bewege Slider um den X Wert zu setzen");
+
+    linearFilterySliderLabel = new QLabel(this);
+    linearFilterySliderLabel->setText("Bewege Slider um den Y Wert zu setzen");
+
     QSlider *xLinearFilterSlider = new QSlider(Qt::Horizontal,0);
     xLinearFilterSlider->setRange(1,15);
     xLinearFilterSlider->setTickPosition(QSlider::TicksBelow);
     xLinearFilterSlider->setTickInterval(1);
     xLinearFilterSlider->setToolTip("X-Achse Linearer Filter");
     connect(xLinearFilterSlider, SIGNAL(valueChanged(int)),this, SLOT(setLinearXValue(int)));
+
+
 
     QSlider *yLinearFilterSlider = new QSlider(Qt::Horizontal,0);
     yLinearFilterSlider->setRange(1,15);
@@ -1866,10 +1885,6 @@ void ImageViewer::generateControlPanels()
     gaussFilterButton->setText("Gauss2DButton");
     QObject::connect(gaussFilterButton, SIGNAL (clicked()), this, SLOT (doubleDGauss()));
 
-    sigmaInput = new QLineEdit();
-
-
-
 
 
     m_option_layout3->addWidget(sliderColorBit);
@@ -1878,25 +1893,44 @@ void ImageViewer::generateControlPanels()
     m_option_layout3->addWidget(myHistogramColorLabel);
     m_option_layout3->addWidget(colorHistgoramButton);
     m_option_layout3->addWidget(autoKontrastColorSlider);
-    m_option_layout3->addWidget(xLinearFilterSlider);
-    m_option_layout3->addWidget(yLinearFilterSlider);
-    m_option_layout3->addWidget(buttonGenerateLinearFilterTable);
-    m_option_layout3->addWidget(linearFilterTable);
-    m_option_layout3->addWidget(linearFilterButton);
-    m_option_layout3->addWidget(linearFilterZeroButton);
-    m_option_layout3->addWidget(linearFilterZeroButton);
-    m_option_layout3->addWidget(linearFilterKonstButton);
-    m_option_layout3->addWidget(linearFilterReflectionButton);
 
-    m_option_layout3->addWidget(sigmaInput);
-    m_option_layout3->addWidget(gaussFilterButton);
 
     tabWidget->addTab(m_option_panel3,"Aufgabenblatt 3");
 
-    //****************************************ÜBUNG 4************************************************//
+
     m_option_panel4 = new QWidget();
     m_option_layout4 = new QVBoxLayout();
     m_option_panel4 ->setLayout(m_option_layout4);
+
+    m_option_layout4->addWidget(linearFilterxSliderLabel);
+    m_option_layout4->addWidget(xLinearFilterSlider);
+    m_option_layout4->addWidget(linearFilterySliderLabel);
+    m_option_layout4->addWidget(yLinearFilterSlider);
+    m_option_layout4->addWidget(buttonGenerateLinearFilterTable);
+    m_option_layout4->addWidget(linearFilterTable);
+    m_option_layout4->addWidget(linearFilterButton);
+    m_option_layout4->addWidget(linearFilterZeroButton);
+    m_option_layout4->addWidget(linearFilterZeroButton);
+    m_option_layout4->addWidget(linearFilterKonstButton);
+    m_option_layout4->addWidget(linearFilterReflectionButton);
+  m_option_layout4->addWidget(sigmaInput1);
+    m_option_layout4->addWidget(gaussFilterButton);
+
+
+
+
+//     m_option_layout4->addWidget(prewittButton);
+
+
+
+
+     tabWidget->addTab(m_option_panel4,"Aufgabenblatt 3.2");
+
+
+    //****************************************ÜBUNG 4************************************************//
+    m_option_panel5 = new QWidget();
+    m_option_layout5 = new QVBoxLayout();
+    m_option_panel5 ->setLayout(m_option_layout5);
 
 
     prewittButton = new QPushButton();
@@ -1911,14 +1945,14 @@ void ImageViewer::generateControlPanels()
     cannyEdgeButton->setText("canny Edge");
     QObject::connect(cannyEdgeButton, SIGNAL (clicked()), this, SLOT (cannyEdge()));
 
-    m_option_layout4->addWidget(prewittButton);
-    m_option_layout4->addWidget(sobelButton);
-    m_option_layout4->addWidget(cannyEdgeButton);
-    m_option_layout4->addWidget(sigmaInput);
+    m_option_layout5->addWidget(prewittButton);
+    m_option_layout5->addWidget(sobelButton);
+    m_option_layout5->addWidget(cannyEdgeButton);
+    m_option_layout5->addWidget(sigmaInput);
 
 
 
-    tabWidget->addTab(m_option_panel4,"Aufgabenblatt 4");
+    tabWidget->addTab(m_option_panel5,"Aufgabenblatt 4");
 
 
 
