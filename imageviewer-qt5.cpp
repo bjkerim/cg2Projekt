@@ -242,7 +242,7 @@ void ImageViewer::varianz(){
         int pixelCount = w*h;
 
         long brightnessSum =0;
-        int tempRes = 0;
+        long tempRes = 0;
         int tempBright = 0;
 
 
@@ -259,16 +259,15 @@ void ImageViewer::varianz(){
 
         for (int i = 0; i < w; i++){
             for(int j = 0; j < h; j++ ){
-                brightnessSum = qRed(imageGray->pixel(i,j));
-                tempBright = brightnessSum - averageBrightness;
-                tempRes = tempRes +(tempBright*tempBright);
+                brightnessSum = qRed(imageGray->pixel(i,j)); // Dieser Pixel hat die Helligkeit 30;
+                tempBright = brightnessSum - averageBrightness; // tempBright = 30-250; --> -220
+                 tempRes = tempRes +(tempBright*tempBright); // 0 + (-220*-220) = + 1000;
 
             }
         }
-        qDebug()<<"Tempres: " << tempRes;
 
 
-        int myVarianz = tempRes / (h*w);
+        long myVarianz = tempRes / (h*w);
         labelVarianz->setText("Die Varianz beträgt: " + QString::number(myVarianz));
         renewLogging();
     }
