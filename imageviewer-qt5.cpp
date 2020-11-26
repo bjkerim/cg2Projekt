@@ -564,7 +564,7 @@ void ImageViewer::helligkeit(int helligkeitswert) {
 
         imageLabel->setPixmap(QPixmap::fromImage(*imageGray));
         averageBrightness();
-               histogram();
+        histogram();
     }}
 
 /*************************************************************************/
@@ -1362,114 +1362,12 @@ void ImageViewer::doubleDGauss(){
 
 
 
-void ImageViewer::doubleDGaussCanny(){
-
-
-    float sigma = sigmaInput->text().toFloat();
-    qDebug()<< "Wert von Sigma" << sigma;
-    int hotspotGewichtung = 0;
-
-    //create the kernel h:
-    int center = (int) ((3.0 * sigma)+0.5);
-
-    std::vector<float> h((2*center)+1); //odd size weil
-
-    int hLength = h.size();
-    int steps = hLength/2;
-
-    //fill the kernel h:
-    double sigmaQuadr = sigma *sigma; //sigma²
-
-    for (int i = 0; i < hLength; i++){ //setzt die index werte in die gauss funktion ein, index verschiebt sich dass mitte des arrays auf null ist. sigma quadrat unverändert über alle schleifen
-        double r = center -i;
-
-        h[i] = ((float) std::exp((-0.5 * (r*r)) / sigmaQuadr)+0.5);
-    }
-
-    for(int g = 0; g < hLength; g++){
-
-        hotspotGewichtung = hotspotGewichtung + h[g];
-    }
-
-    for(int spalte = 0; spalte < image->width(); spalte++){
-        for(int zeile = 0; zeile < image->height(); zeile++){
-
-            int cbTemp = 128+((qRed(image->pixel(spalte,zeile)) * -0.169) + (qGreen(image->pixel(spalte,zeile))* -0.331) + (qBlue(image->pixel(spalte,zeile))*0.5));
-            int crTemp = 128+((qRed(image->pixel(spalte,zeile)) * 0.5) + (qGreen(image->pixel(spalte,zeile))* -0.419) + (qBlue(image->pixel(spalte,zeile))*-0.081));
-            int sumY = 0;
-
-
-            for (int s = (-steps); s <= steps; s++){
-                int yTemp = 0;
-
-                if((spalte+s) < 0 || (spalte+s) >= (image->height())) {
-
-                    yTemp = getYfromRGB(image->pixel(spalte,zeile));
-
-                }
-
-                else{
-                    yTemp = getYfromRGB(image->pixel(spalte+s,zeile));
-
-
-                }
-
-                int c = h[s+steps];
-
-                sumY += c * yTemp;
-
-            }
-            int newY = (int) (sumY/hotspotGewichtung);
-
-            QRgb color = convertYcbcrToRgb(newY, cbTemp, crTemp);
-
-            imageCopy->setPixel(spalte,zeile, color);
-
-        }
-
-    }
-
-    imageGauss = new QImage(*imageCopy);
-    for(int spalte = 0; spalte < image->width(); spalte++){
-        for(int zeile = 0; zeile < image->height(); zeile++){
-
-            int cbTemp = 128+((qRed(image->pixel(spalte,zeile)) * -0.169) + (qGreen(image->pixel(spalte,zeile))* -0.331) + (qBlue(image->pixel(spalte,zeile))*0.5));
-            int crTemp = 128+((qRed(imageGauss->pixel(spalte,zeile)) * 0.5) + (qGreen(imageGauss->pixel(spalte,zeile))* -0.419) + (qBlue(imageGauss->pixel(spalte,zeile))*-0.081));
-            int sumY = 0;
-
-
-            for (int s = (-steps); s <= steps; s++){
-                int yTemp = 0;
-
-                if((zeile+s) < 0 || (zeile+s) >= (image->width())) {
-                    yTemp = getYfromRGB(imageGauss->pixel(spalte,zeile));
-                }
-
-                else{
-                    yTemp = getYfromRGB(imageGauss->pixel(spalte,zeile+s));
-
-                }
-                int c = h[s+steps];
-                sumY += c * yTemp;
-            }
-            int newY = (int) (sumY/hotspotGewichtung);
-
-            QRgb color = convertYcbcrToRgb(newY, cbTemp, crTemp);
-            imageCopy->setPixel(spalte,zeile,color);
-        }
-    }
-
-    imageLabel->setPixmap(QPixmap::fromImage(*imageCopy));
-
-}
-
-
 void ImageViewer::kantePrewitt(){
     *imageCopy = *image;
-//1. durchgang, original imagegray auf imagecopy geschrieben
-//2. durchgang, werte aus imagecopy verrechnet auf image2 geschrieben
-//3.durchgang , werte aus image2 verrechnet auf image3 geschrieben
-//4.durchgang, werte aus image3 verrechnet auf imageCopy geschrieben
+    //1. durchgang, original imagegray auf imagecopy geschrieben
+    //2. durchgang, werte aus imagecopy verrechnet auf image2 geschrieben
+    //3.durchgang , werte aus image2 verrechnet auf image3 geschrieben
+    //4.durchgang, werte aus image3 verrechnet auf imageCopy geschrieben
     //PIXMAP AUS IMAGECOPY
     std::vector<int> first = {1,1,1} ;
     std::vector<int> second = {-1,0,1} ;
@@ -1510,7 +1408,7 @@ void ImageViewer::kantePrewitt(){
     //2. durchgang, werte aus imagecopy verrechnet auf image2 geschrieben
     //3.durchgang , werte aus image2 verrechnet auf image3 geschrieben
     //4.durchgang, werte aus image3 verrechnet auf imageCopy geschrieben
-        //PIXMAP AUS IMAGECOPY
+    //PIXMAP AUS IMAGECOPY
 
 
     for(int spalte = 0; spalte < image->width(); spalte++){
@@ -1524,12 +1422,12 @@ void ImageViewer::kantePrewitt(){
 
                 if((zeile+s) < 0 || (zeile+s) >= (image->width())) {
 
-                     tempCol = qRed(imageCopy->pixel(spalte,zeile));
+                    tempCol = qRed(imageCopy->pixel(spalte,zeile));
 
                 }
 
                 else{
-                   tempCol = qRed(imageCopy->pixel(spalte,zeile+s));
+                    tempCol = qRed(imageCopy->pixel(spalte,zeile+s));
 
                 }
 
@@ -1545,7 +1443,7 @@ void ImageViewer::kantePrewitt(){
     QImage * image3 = new QImage(*image2);
     //3.durchgang , werte aus image2 verrechnet auf image3 geschrieben
     //4.durchgang, werte aus image3 verrechnet auf imageCopy geschrieben
-        //PIXMAP AUS IMAGECOPY
+    //PIXMAP AUS IMAGECOPY
 
     for(int spalte = 0; spalte < image->width(); spalte++){
         for(int zeile = 0; zeile < image->height(); zeile++){
@@ -1558,12 +1456,12 @@ void ImageViewer::kantePrewitt(){
 
                 if((zeile+s) < 0 || (zeile+s) >= (image->width())) {
 
-                     tempCol = qRed(image2->pixel(spalte,zeile));
+                    tempCol = qRed(image2->pixel(spalte,zeile));
 
                 }
 
                 else{
-                   tempCol = qRed(image2->pixel(spalte,zeile+s));
+                    tempCol = qRed(image2->pixel(spalte,zeile+s));
 
                 }
 
@@ -1618,7 +1516,7 @@ void ImageViewer::kantePrewitt(){
 
 
 
-    void ImageViewer::sobel(){
+void ImageViewer::sobel(){
 
     *imageCopy = *image;
 
@@ -1646,7 +1544,7 @@ void ImageViewer::kantePrewitt(){
                         if (spalteArr == 0){addWert = qRed(image->pixel(spalte-1, zeile-1)); } //spalte ist x, zeiel ist y
                         else if(spalteArr ==1){addWert = qRed(image->pixel(spalte, zeile-1));}
                         else if(spalteArr == 2){addWert = qRed(image->pixel(spalte+1, zeile-1));}
-                     }
+                    }
 
                     else if(zeileArr == 1){
                         if (spalteArr == 0){addWert = qRed(image->pixel(spalte-1, zeile)); } //spalte ist x, zeiel ist y
@@ -1660,11 +1558,11 @@ void ImageViewer::kantePrewitt(){
                         else if(spalteArr == 2){addWert = qRed(image->pixel(spalte+1, zeile+1));}
                     }
 
-                        int a1 = arr1[zeileArr][spalteArr];
-                        int a2 = arr2[zeileArr][spalteArr];
+                    int a1 = arr1[zeileArr][spalteArr];
+                    int a2 = arr2[zeileArr][spalteArr];
 
-                        sum1 += a1 * addWert;
-                        sum2 += a2 * addWert;
+                    sum1 += a1 * addWert;
+                    sum2 += a2 * addWert;
 
                 }
             }
@@ -1675,18 +1573,112 @@ void ImageViewer::kantePrewitt(){
         }
     }
     imageLabel->setPixmap(QPixmap::fromImage(*imageCopy));
-    }
-
-
-
-
+}
 
 
 void ImageViewer::cannyEdge(){
+
+    *imageGray = *image;
     *imageCopy = *image;
-    doubleDGaussCanny();
-    sobel();
+    int w = image->width();
+    int he = image->height();
+
+    for (int i = 0; i <= w-1; i++){
+        for(int j = 0; j <= he-1; j++ ){
+            QRgb color = image->pixel(i,j);
+            int gray = ((qRed(color) *0.299) + (qGreen(color)* 0.587) + (qBlue(color)*0.114));
+            imageGray->setPixel(i, j, qRgb(gray,gray,gray));
+        }
+    }
+
+
+    float sigma = sigmaInput->text().toFloat();
+    int hotspotGewichtung = 0;
+
+    //create the kernel h:
+    int center = (int) ((3.0 * sigma)+0.5);
+
+    std::vector<float> h((2*center)+1); //odd size weil
+
+    int hLength = h.size();
+    int steps = hLength/2;
+
+    //fill the kernel h:
+    double sigmaQuadr = sigma *sigma; //sigma²
+
+    for (int i = 0; i < hLength; i++){ //setzt die index werte in die gauss funktion ein, index verschiebt sich dass mitte des arrays auf null ist. sigma quadrat unverändert über alle schleifen
+        double r = center -i;
+
+        h[i] = ((float) std::exp((-0.5 * (r*r)) / sigmaQuadr)+0.5);
+    }
+
+    for(int g = 0; g < hLength; g++){
+
+        hotspotGewichtung = hotspotGewichtung + h[g];
+    }
+
+    for(int spalte = 0; spalte < image->width(); spalte++){
+        for(int zeile = 0; zeile < image->height(); zeile++){
+
+            int sumred = 0;
+
+
+            for (int s = (-steps); s <= steps; s++){
+                int yTemp = 0;
+
+                if((spalte+s) < 0 || (spalte+s) >= (image->height())) {
+
+                    yTemp = qRed(imageGray->pixel(spalte,zeile));
+                }
+                else{
+                    yTemp = qRed(imageGray->pixel(spalte+s,zeile));
+
+                }
+                int c = h[s+steps];
+
+                sumred += c * yTemp;
+
+            }
+            int newY = (int) (sumred/hotspotGewichtung);
+
+            imageCopy->setPixel(spalte,zeile, qRgb(newY,newY,newY));
+
+        }
+
+    }
+
+    imageGauss = new QImage(*imageCopy);
+
+    for(int spalte = 0; spalte < image->width(); spalte++){
+        for(int zeile = 0; zeile < image->height(); zeile++){
+
+            int sumred = 0;
+
+
+            for (int s = (-steps); s <= steps; s++){
+                int yTemp = 0;
+
+                if((zeile+s) < 0 || (zeile+s) >= (image->width())) {
+                    yTemp = qRed(imageGauss->pixel(spalte,zeile));
+                }
+
+                else{
+                    yTemp = qRed(imageGauss->pixel(spalte,zeile+s));
+
+                }
+                int c = h[s+steps];
+                sumred += c * yTemp;
+            }
+            int newY = (int) (sumred/hotspotGewichtung);
+
+            imageCopy->setPixel(spalte,zeile,qRgb(newY,newY,newY));
+        }
+    }
+
+    imageLabel->setPixmap(QPixmap::fromImage(*imageCopy));
 }
+// sobel();
+
 
 
 
@@ -1911,8 +1903,8 @@ void ImageViewer::generateControlPanels()
     prewittButton->setText("Prewitt");
     QObject::connect(prewittButton, SIGNAL (clicked()), this, SLOT (kantePrewitt()));
 
- sobelButton = new QPushButton();
- sobelButton->setText("Sobel");
+    sobelButton = new QPushButton();
+    sobelButton->setText("Sobel");
     QObject::connect(sobelButton, SIGNAL (clicked()), this, SLOT (sobel()));
 
     cannyEdgeButton = new QPushButton();
@@ -1922,6 +1914,8 @@ void ImageViewer::generateControlPanels()
     m_option_layout4->addWidget(prewittButton);
     m_option_layout4->addWidget(sobelButton);
     m_option_layout4->addWidget(cannyEdgeButton);
+    m_option_layout4->addWidget(sigmaInput);
+
 
 
     tabWidget->addTab(m_option_panel4,"Aufgabenblatt 4");

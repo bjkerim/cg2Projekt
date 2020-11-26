@@ -159,7 +159,6 @@ private slots:
     void linearFilterReflectionPadding();
     void doubleDGauss();
     void sobel();
-    void doubleDGaussCanny();
     void cannyEdge();
     void deleteCross();
     void kantePrewitt();
@@ -167,9 +166,6 @@ private slots:
 
 
     // hier können weitere als SLOTS definierte Funktionen hin, die auf Knopfdruck etc. aufgerufen werden.
-
-
-
 
 
     void open();
