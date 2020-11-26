@@ -634,7 +634,7 @@ void ImageViewer::helligkeitColor(int helligkeitswert) {
 void ImageViewer::kontrast(int konstante) {
     if(imageGray!=NULL){
         *imageGray = *image;
-
+        qDebug()<<konstante;
         int w = image->width();
         int h = image->height();
         int low = 0;
@@ -662,17 +662,23 @@ void ImageViewer::kontrast(int konstante) {
         for (int i=0; i <w; i++){
             for (int j = 0; j<h; j++){
                 int newPixelValue = 0;
-                if (konstante >= 0) {
+                if (konstante > 0) {
                     newPixelValue = (((qRed(imageGray->pixel(i,j)) - mid) * konstante)) + 0.5;
+                    newPixelValue = newPixelValue + mid;
                 }
 
                 else if (konstante < 0) {
 
                     newPixelValue = (((qRed(imageGray->pixel(i,j)) - mid) / std::abs(konstante))) + 0.5;
+                    newPixelValue = newPixelValue + mid;
+                }
+
+                else if (konstante == 0){
+                    newPixelValue = qRed(imageGray->pixel(i,j));
                 }
 
 
-                newPixelValue = newPixelValue + mid;
+
 
 
                 if(newPixelValue > 255) {
