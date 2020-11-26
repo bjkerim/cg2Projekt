@@ -678,9 +678,6 @@ void ImageViewer::kontrast(int konstante) {
                 }
 
 
-
-
-
                 if(newPixelValue > 255) {
                     newPixelValue = 255;
                 }
@@ -750,18 +747,22 @@ void ImageViewer::kontrastColor(int konstante) {
             int newYValue = 0;
             if (konstante > 0) {
                 newYValue = ((y - mid) * konstante) + 0.5;
+                  newYValue = newYValue + mid;
             }
 
             else if (konstante < 0) {
 
                 newYValue = ((y - mid) / std::abs(konstante)) + 0.5;
+                newYValue = newYValue + mid;
+
             }
 
-            //            else if (konstante == 0) {
-            //                imageLabel->setPixmap(QPixmap::fromImage(*imageCopy));
+                  else if (konstante == 0) {
+                newYValue = y;
 
-            //            }
-            newYValue = newYValue + mid;
+
+                       }
+
 
             int newR = ((newYValue-16)*1.164) + ((cr-128)*1.596);
             int newG = ((newYValue-16)*1.164) + ((cb-128)*(-0.392)) + ((cr-128)*(-0.813));
