@@ -597,8 +597,6 @@ void ImageViewer::helligkeitColor(int helligkeitswert) {
                     int newG = (((y-16)*1.164) + ((cb-128)*(-0.392)) + ((cr-128)*(-0.813))) +  helligkeitswert ;
                     int newB =  (((y-16)*1.164) + ((cb-128)*2.017)) +  helligkeitswert ;
 
-
-
                 if(newR > 255) {
                     newR = 255;
                 }
