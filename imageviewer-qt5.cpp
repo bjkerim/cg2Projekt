@@ -300,7 +300,7 @@ void ImageViewer::bitDynamik(int bits){
         histogram();
         averageBrightness();
     }
-   varianz();
+    varianz();
 
 
 }
@@ -419,7 +419,6 @@ void ImageViewer::histogram() {
 }
 
 /************************************************/
-
 void ImageViewer::histogramColor() {
     if (image !=NULL){
 
@@ -578,56 +577,66 @@ void ImageViewer::helligkeit(int helligkeitswert) {
 /*************************************************************************/
 
 void ImageViewer::helligkeitColor(int helligkeitswert) {
+    if (image!=NULL){
+        *imageCopy = *image;
 
-    *imageCopy = *image;
-
-    int w = image->width();
-    int h = image->height();
+        int w = image->width();
+        int h = image->height();
 
 
-    for (int i = 0; i <= w-1; i++){
-        for(int j = 0; j <= h-1; j++ ){
-            QRgb color = imageCopy->pixel(i,j);
+        for (int i = 0; i < w; i++){
+            for(int j = 0; j < h; j++ ){
+                QRgb color = imageCopy->pixel(i,j);
 
-            int y = ((qRed(color) *0.299) + (qGreen(color)* 0.587) + (qBlue(color)*0.114));
-            int cb = 128+((qRed(color) * -0.169) + (qGreen(color)* -0.331) + (qBlue(color)*0.5));
-            int cr = 128+((qRed(color) * 0.5) + (qGreen(color)* -0.419) + (qBlue(color)*-0.081));
+                int y = ((qRed(color) *0.299) + (qGreen(color)* 0.587) + (qBlue(color)*0.114));
+                int cb = 128+((qRed(color) * -0.169) + (qGreen(color)* -0.331) + (qBlue(color)*0.5));
+                int cr = 128+((qRed(color) * 0.5) + (qGreen(color)* -0.419) + (qBlue(color)*-0.081));
 
-            int newR = (((y-16)*1.164) + ((cr-128)*1.596)) +  helligkeitswert;
-            int newG = (((y-16)*1.164) + ((cb-128)*(-0.392)) + ((cr-128)*(-0.813))) +  helligkeitswert ;
-            int newB =  (((y-16)*1.164) + ((cb-128)*2.017)) +  helligkeitswert ;
 
-            if(newR > 255) {
-                newR = 255;
+                    int newR = (((y-16)*1.164) + ((cr-128)*1.596)) +  helligkeitswert;
+                    int newG = (((y-16)*1.164) + ((cb-128)*(-0.392)) + ((cr-128)*(-0.813))) +  helligkeitswert ;
+                    int newB =  (((y-16)*1.164) + ((cb-128)*2.017)) +  helligkeitswert ;
+
+
+
+                if(newR > 255) {
+                    newR = 255;
+                }
+                else if (newR < 0) {
+                    newR = 0;
+                }
+
+
+                if(newG > 255) {
+                    newG = 255;
+                }
+                else if (newG < 0) {
+                    newG = 0;
+                }
+
+
+                if(newB > 255) {
+                    newB = 255;
+                }
+                else if (newB < 0) {
+                    newB = 0;
+                }
+
+
+//                QColor newColor = qRgb(newR,newG,newB);
+
+               imageCopy->setPixel(i, j, qRgb(newR,newG,newB));
+
             }
-            else if (newR < 0) {
-                newR = 0;
-            }
-            if(newG > 255) {
-                newG = 255;
-            }
-            else if (newG < 0) {
-                newG = 0;
-            }
-            if(newB > 255) {
-                newB = 255;
-            }
-            else if (newB < 0) {
-                newB = 0;
-            }
-
-            QColor newColor = qRgb(newR,newG,newB);
-
-            imageCopy->setPixelColor(i, j, newColor);
-
         }
 
-        imageLabel->setPixmap(QPixmap::fromImage(*imageCopy));
+            imageLabel->setPixmap(QPixmap::fromImage(*imageCopy));
+
+        }
+        histogramColor();
 
     }
-    histogramColor();
 
-}
 
 /***************************************************************************/
 
@@ -747,7 +756,7 @@ void ImageViewer::kontrastColor(int konstante) {
             int newYValue = 0;
             if (konstante > 0) {
                 newYValue = ((y - mid) * konstante) + 0.5;
-                  newYValue = newYValue + mid;
+                newYValue = newYValue + mid;
             }
 
             else if (konstante < 0) {
@@ -757,11 +766,11 @@ void ImageViewer::kontrastColor(int konstante) {
 
             }
 
-                  else if (konstante == 0) {
+            else if (konstante == 0) {
                 newYValue = y;
 
 
-                       }
+            }
 
 
             int newR = ((newYValue-16)*1.164) + ((cr-128)*1.596);
@@ -1379,170 +1388,16 @@ void ImageViewer::doubleDGauss(){
 
 
 void ImageViewer::kantePrewitt(){
-    *imageCopy = *image;
-    //1. durchgang, original imagegray auf imagecopy geschrieben
-    //2. durchgang, werte aus imagecopy verrechnet auf image2 geschrieben
-    //3.durchgang , werte aus image2 verrechnet auf image3 geschrieben
-    //4.durchgang, werte aus image3 verrechnet auf imageCopy geschrieben
-    //PIXMAP AUS IMAGECOPY
-    std::vector<int> first = {1,1,1} ;
-    std::vector<int> second = {-1,0,1} ;
-
-    int steps = 1;
-
-    for(int spalte = 0; spalte < image->width(); spalte++){
-        for(int zeile = 0; zeile < image->height(); zeile++){
-
-            int sumColor = 0;
-
-
-            for (int s = (-steps); s <= steps; s++){
-                int tempCol = 0;
-
-                if((spalte+s) < 0 || (spalte+s) >= (image->height())) {
-
-                    tempCol = qRed(image->pixel(spalte,zeile));
-
-                }
-
-                else{
-                    tempCol = qRed(image->pixel(spalte+s,zeile));
-
-                }
-                int c = first[s+steps];
-
-                sumColor += c * tempCol;
-
-            }
-            int tempCol = (int) (sumColor/3);
-
-            imageCopy->setPixel(spalte, zeile, qRgb(tempCol,tempCol,tempCol));
-        }
-    }
-
-    QImage * image2 = new QImage(*imageCopy);
-    //2. durchgang, werte aus imagecopy verrechnet auf image2 geschrieben
-    //3.durchgang , werte aus image2 verrechnet auf image3 geschrieben
-    //4.durchgang, werte aus image3 verrechnet auf imageCopy geschrieben
-    //PIXMAP AUS IMAGECOPY
-
-
-    for(int spalte = 0; spalte < image->width(); spalte++){
-        for(int zeile = 0; zeile < image->height(); zeile++){
-
-            int sumColor = 0;
-
-
-            for (int s = (-steps); s <= steps; s++){
-                int tempCol = 0;
-
-                if((zeile+s) < 0 || (zeile+s) >= (image->width())) {
-
-                    tempCol = qRed(imageCopy->pixel(spalte,zeile));
-
-                }
-
-                else{
-                    tempCol = qRed(imageCopy->pixel(spalte,zeile+s));
-
-                }
-
-                int c = second[s+steps];
-
-                sumColor += c * tempCol;
-
-            }
-            int tempCol = (int) (sumColor/2);
-            image2->setPixel(spalte, zeile, qRgb(tempCol,tempCol,tempCol));
-        }
-    }
-    QImage * image3 = new QImage(*image2);
-    //3.durchgang , werte aus image2 verrechnet auf image3 geschrieben
-    //4.durchgang, werte aus image3 verrechnet auf imageCopy geschrieben
-    //PIXMAP AUS IMAGECOPY
-
-    for(int spalte = 0; spalte < image->width(); spalte++){
-        for(int zeile = 0; zeile < image->height(); zeile++){
-
-            int sumColor = 0;
-
-
-            for (int s = (-steps); s <= steps; s++){
-                int tempCol = 0;
-
-                if((zeile+s) < 0 || (zeile+s) >= (image->width())) {
-
-                    tempCol = qRed(image2->pixel(spalte,zeile));
-
-                }
-
-                else{
-                    tempCol = qRed(image2->pixel(spalte,zeile+s));
-
-                }
-
-                int c = first[s+steps];
-
-                sumColor += c * tempCol;
-
-            }
-            int tempCol = (int) (sumColor/3);
-            image3->setPixel(spalte, zeile, qRgb(tempCol,tempCol,tempCol));
-        }
-    }
-
-    for(int spalte = 0; spalte < image->width(); spalte++){
-        for(int zeile = 0; zeile < image->height(); zeile++){
-
-            int sumColor = 0;
-
-
-            for (int s = (-steps); s <= steps; s++){
-                int tempCol = 0;
-
-                if((spalte+s) < 0 || (spalte+s) >= (image->height())) {
-
-                    tempCol = qRed(image3->pixel(spalte,zeile));
-
-                }
-
-                else{
-                    tempCol = qRed(image3->pixel(spalte+s,zeile));
-
-                }
-                int c = second[s+steps];
-
-                sumColor += c * tempCol;
-
-            }
-            int tempCol = (int) (sumColor/2);
-
-            imageCopy->setPixel(spalte, zeile, qRgb(tempCol,tempCol,tempCol));
-        }
-    }
-
-    imageLabel->setPixmap(QPixmap::fromImage(*imageCopy));
-}
-
-
-
-
-
-
-
-
-
-void ImageViewer::sobel(){
-
+    if (image != NULL){
     *imageCopy = *image;
 
-    int arr1[3][3] = {{-1,0,1},{-2,0,2},{-1,0,1}};
+    int arr1[3][3] = {{-1,0,1},{-1,0,1},{-1,0,1}};
 
-    int arr2[3][3] = {{-1,-2,-1},{0,0,0},{1,2,1}};
+    int arr2[3][3] = {{-1,-1,-1},{0,0,0},{1,1,1}};
 
 
     for (int zeile = 0; zeile < image->height(); zeile++){
-        for (int spalte = 1; spalte < image->width(); spalte++){
+        for (int spalte = 0; spalte < image->width(); spalte++){
 
             int sum1 = 0;
             int sum2 = 0;
@@ -1552,7 +1407,7 @@ void ImageViewer::sobel(){
             for (int zeileArr = 0; zeileArr <= 2; zeileArr++){
                 for(int spalteArr = 0; spalteArr <= 2 ; spalteArr++){
 
-                    if((zeile -1 <0) || (zeile >= image->height()) || (spalte -1 <0) || (spalte >= image->width()) ){
+                    if((zeile-1 <0) || (zeile+1 >= image->height()) || (spalte-1 <0) || (spalte+1 >= image->width()) ){
                         addWert =qRed(image->pixel(spalte, zeile));
                     }
 
@@ -1592,13 +1447,91 @@ void ImageViewer::sobel(){
 }
 
 
+
+}
+
+
+
+
+
+
+
+
+
+void ImageViewer::sobel(){
+    if (image != NULL){
+    *imageCopy = *image;
+
+    int arr1[3][3] = {{-1,0,1},{-2,0,2},{-1,0,1}};
+
+    int arr2[3][3] = {{-1,-2,-1},{0,0,0},{1,2,1}};
+
+
+    for (int zeile = 0; zeile < image->height(); zeile++){
+        for (int spalte = 1; spalte < image->width(); spalte++){
+
+            int sum1 = 0;
+            int sum2 = 0;
+            int addWert = 0;
+
+
+            for (int zeileArr = 0; zeileArr <= 2; zeileArr++){
+                for(int spalteArr = 0; spalteArr <= 2 ; spalteArr++){
+
+                    if((zeile-1 <0) || (zeile+1 >= image->height()) || (spalte-1 <0) || (spalte+1 >= image->width()) ){
+                        addWert =qRed(image->pixel(spalte, zeile));
+                    }
+
+                    else if(zeileArr == 0){
+                        if (spalteArr == 0){addWert = qRed(image->pixel(spalte-1, zeile-1)); } //spalte ist x, zeiel ist y
+                        else if(spalteArr ==1){addWert = qRed(image->pixel(spalte, zeile-1));}
+                        else if(spalteArr == 2){addWert = qRed(image->pixel(spalte+1, zeile-1));}
+                    }
+
+                    else if(zeileArr == 1){
+                        if (spalteArr == 0){addWert = qRed(image->pixel(spalte-1, zeile)); } //spalte ist x, zeiel ist y
+                        else if(spalteArr ==1){addWert = qRed(image->pixel(spalte, zeile));}
+                        else if(spalteArr == 2){addWert = qRed(image->pixel(spalte+1, zeile));}
+                    }
+
+                    else if(zeileArr == 2){
+                        if (spalteArr == 0){addWert = qRed(image->pixel(spalte-1, zeile+1)); } //spalte ist x, zeiel ist y
+                        else if(spalteArr ==1){addWert = qRed(image->pixel(spalte, zeile+1));}
+                        else if(spalteArr == 2){addWert = qRed(image->pixel(spalte+1, zeile+1));}
+                    }
+
+                    int a1 = arr1[zeileArr][spalteArr];
+                    int a2 = arr2[zeileArr][spalteArr];
+
+                    sum1 += a1 * addWert;
+                    sum2 += a2 * addWert;
+
+                }
+            }
+            int mittelung = std::sqrt((sum1*sum1) + (sum2*sum2));
+            int richtung = std::atan2(sum1, sum2);
+
+            imageCopy->setPixel(spalte, zeile, qRgb(mittelung,mittelung,mittelung));
+        }
+    }
+    imageLabel->setPixmap(QPixmap::fromImage(*imageCopy));
+}}
+
+
 void ImageViewer::cannyEdge(){
+
 
     *imageGray = *image;
     *imageCopy = *image;
+    int imageheight = image->height();
+    int imagewidth = image->width();
     int w = image->width();
     int he = image->height();
 
+    float sigma = sigmaInput->text().toFloat();
+    int hotspotGewichtung = 0;
+
+    //GRAUSTUFEN
     for (int i = 0; i <= w-1; i++){
         for(int j = 0; j <= he-1; j++ ){
             QRgb color = image->pixel(i,j);
@@ -1608,10 +1541,8 @@ void ImageViewer::cannyEdge(){
     }
 
 
-    float sigma = sigmaInput->text().toFloat();
-    int hotspotGewichtung = 0;
 
-    //create the kernel h:
+    //GAUSS KERNEL
     int center = (int) ((3.0 * sigma)+0.5);
 
     std::vector<float> h((2*center)+1); //odd size weil
@@ -1663,7 +1594,10 @@ void ImageViewer::cannyEdge(){
 
     }
 
+    imageEdgeDir = new QImage(*image);
+    imageGradient = new QImage(*image); //=Gradient ist ergebnis des Sobel-Algorithmus mit sqrt(gx² + gy²)
     imageGauss = new QImage(*imageCopy);
+    //*imageSobel = *image;
 
     for(int spalte = 0; spalte < image->width(); spalte++){
         for(int zeile = 0; zeile < image->height(); zeile++){
@@ -1675,11 +1609,11 @@ void ImageViewer::cannyEdge(){
                 int yTemp = 0;
 
                 if((zeile+s) < 0 || (zeile+s) >= (image->width())) {
-                    yTemp = qRed(imageGauss->pixel(spalte,zeile));
+                    yTemp = qRed(imageCopy->pixel(spalte,zeile));
                 }
 
                 else{
-                    yTemp = qRed(imageGauss->pixel(spalte,zeile+s));
+                    yTemp = qRed(imageCopy->pixel(spalte,zeile+s));
 
                 }
                 int c = h[s+steps];
@@ -1687,13 +1621,99 @@ void ImageViewer::cannyEdge(){
             }
             int newY = (int) (sumred/hotspotGewichtung);
 
-            imageCopy->setPixel(spalte,zeile,qRgb(newY,newY,newY));
+            imageGauss->setPixel(spalte,zeile,qRgb(newY,newY,newY));
         }
     }
 
-    imageLabel->setPixmap(QPixmap::fromImage(*imageCopy));
+    //GAUSS FERTIG IM IMAGEGAUSS
+
+   //-----------------------------------------------
+    // SOBEL
+
+    int arr1[3][3] = {{-1,0,1},{-2,0,2},{-1,0,1}};
+    int arr2[3][3] = {{-1,-2,-1},{0,0,0},{1,2,1}};
+    for (int zeile = 0; zeile < image->height(); zeile++){
+        for (int spalte = 1; spalte < image->width(); spalte++){
+
+            int sum1 = 0;
+            int sum2 = 0;
+            int addWert = 0;
+
+
+            for (int zeileArr = 0; zeileArr <= 2; zeileArr++){
+                for(int spalteArr = 0; spalteArr <= 2 ; spalteArr++){
+
+                    if((zeile -1 <0) || (zeile >= image->height()) || (spalte -1 <0) || (spalte >= image->width()) ){
+                        addWert =qRed(imageGauss->pixel(spalte, zeile));
+                    }
+
+                    else if(zeileArr == 0){
+                        if (spalteArr == 0){addWert = qRed(imageGauss->pixel(spalte-1, zeile-1)); } //spalte ist x, zeiel ist y
+                        else if(spalteArr ==1){addWert = qRed(imageGauss->pixel(spalte, zeile-1));}
+                        else if(spalteArr == 2){addWert = qRed(imageGauss->pixel(spalte+1, zeile-1));}
+                    }
+
+                    else if(zeileArr == 1){
+                        if (spalteArr == 0){addWert = qRed(imageGauss->pixel(spalte-1, zeile)); } //spalte ist x, zeiel ist y
+                        else if(spalteArr ==1){addWert = qRed(imageGauss->pixel(spalte, zeile));}
+                        else if(spalteArr == 2){addWert = qRed(imageGauss->pixel(spalte+1, zeile));}
+                    }
+
+                    else if(zeileArr == 2){
+                        if (spalteArr == 0){addWert = qRed(imageGauss->pixel(spalte-1, zeile+1)); } //spalte ist x, zeiel ist y
+                        else if(spalteArr ==1){addWert = qRed(imageGauss->pixel(spalte, zeile+1));}
+                        else if(spalteArr == 2){addWert = qRed(imageGauss->pixel(spalte+1, zeile+1));}
+                    }
+
+                    int a1 = arr1[zeileArr][spalteArr];
+                    int a2 = arr2[zeileArr][spalteArr];
+
+                    sum1 += a1 * addWert;
+                    sum2 += a2 * addWert;
+
+                }
+            }
+            int mittelung = std::sqrt((sum1*sum1) + (sum2*sum2));
+            int richtung = std::atan2(sum1, sum2);
+
+            imageEdgeDir->setPixel(spalte, zeile, qRgb(richtung, richtung, richtung)); //gradient
+
+            imageGradient->setPixel(spalte, zeile, qRgb(mittelung,mittelung,mittelung)); //sobel ergebnis
+        }
+    }
+
+ //SOBEL FERTIG; JETZT EDGETRACING----------------------------------------------------------------------------------
+// höchsten und niedrigsten grauwert finden
+
+    int max = 0;
+    int min = 1000;
+
+    for (int zeile = 0; zeile < image->height(); zeile++){
+        for (int spalte = 0; spalte < image->width(); spalte++){
+
+            if(qRed(imageGradient->pixel(zeile, spalte)) < min){
+                min = (qRed(imageGradient->pixel(zeile, spalte)));
+            }
+            else if(qRed(imageGradient->pixel(zeile, spalte)) > max){
+                max = (qRed(imageGradient->pixel(zeile, spalte)));
+            }
+        }
+    }
+
+    int Temp = -1;
+
+//    for (int zeile = 0; zeile < image->height(); zeile++){
+//            for (int spalte = 0; spalte < image->width(); spalte++){
+
+//                if(qRed(imageGradient->pixel(zeile, spalte)) >
+//            }
+//            }
+
+
+
+    imageLabel->setPixmap(QPixmap::fromImage(*imageEdgeDir));
 }
-// sobel();
+
 
 
 
