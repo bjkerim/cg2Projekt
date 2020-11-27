@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE QtCreatorProject>
-<!-- Written by QtCreator 4.8.2, 2020-11-27T02:36:25. -->
+<!-- Written by QtCreator 4.8.2, 2020-11-27T03:50:37. -->
 <qtcreator>
  <data>
   <variable>EnvironmentId</variable>
@@ -291,8 +291,8 @@
     <value type="int" key="PE.EnvironmentAspect.Base">2</value>
     <valuelist type="QVariantList" key="PE.EnvironmentAspect.Changes"/>
     <value type="QString" key="ProjectExplorer.ProjectConfiguration.DefaultDisplayName">imageviewer-qt5</value>
-    <value type="QString" key="ProjectExplorer.ProjectConfiguration.DisplayName"></value>
-    <value type="QString" key="ProjectExplorer.ProjectConfiguration.Id">Qt4ProjectManager.Qt4RunConfiguration:/home/cg1/Desktop/Dokumente/cg2Projekt/imageviewer-qt5.pro</value>
+    <value type="QString" key="ProjectExplorer.ProjectConfiguration.DisplayName">imageviewer-qt52</value>
+    <value type="QString" key="ProjectExplorer.ProjectConfiguration.Id">Qt4ProjectManager.Qt4RunConfiguration:/home/cg1/Dokumente/cg2Projekt/imageviewer-qt5.pro</value>
     <value type="QString" key="Qt4ProjectManager.Qt4RunConfiguration.ProFile">imageviewer-qt5.pro</value>
     <value type="QString" key="RunConfiguration.Arguments"></value>
     <value type="uint" key="RunConfiguration.QmlDebugServerPort">3768</value>

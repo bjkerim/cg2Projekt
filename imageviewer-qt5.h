@@ -126,7 +126,13 @@ private:
     QPushButton* linearFilterKonstButton;
     QPushButton* linearFilterReflectionButton;
     QLineEdit* sigmaInput;
-        QLineEdit* sigmaInput1;
+    QLineEdit* sigmaInput1;
+    QLineEdit* sigmaInputUSM;
+    QPushButton*  buttonUSM;
+    QLineEdit* aUSM;
+
+
+
     QPushButton * gaussFilterButton;
     QPushButton* sobelButton;
 
@@ -170,6 +176,7 @@ private slots:
     void cannyEdge();
     void deleteCross();
     void kantePrewitt();
+    void USM();
 
 
 
@@ -231,9 +238,10 @@ private:
     QImage* myHistogramColor;
     QImage* mirrorImage;
     QImage* imageGauss;
-        QImage* imageEdgeDir;
-        QImage* imageGradient;
-        QImage* imageSobel;
+    QImage* imageEdgeDir;
+    QImage* imageGradient;
+    QImage* imageSobel;
+    QImage* imageMask;
 
 
     std::fstream logFile;
