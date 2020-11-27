@@ -23,6 +23,6 @@ Folgende Aufgaben wurden nicht vollständig bearbeitet:
     
 # Bekannte Bugs
    Histogram für Farbbilder wird falsch skaliert, out ouf range Error.
-
+   Logratischmische Anzeige des Schwarz-Weiß Histogramms out ouf range.
 
 

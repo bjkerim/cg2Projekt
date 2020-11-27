@@ -143,18 +143,18 @@ private slots:
     // Beispiel für einen Algorithmus
     void applyCross(int kreuzBreite);
     void convertToGrayscale();
-    void averageBrightness();
-    void varianz();
-    void histogram();
-    void helligkeit(int helligkeitswert);
+    void mittlereHelligkeitGraustufen();
+    void varianzGraufstufe();
+    void histogramGraustufe();
+    void brightnessGraustufe(int helligkeitswert);
     void kontrast(int konstante);
     void kontrastColor(int konstante);
-    void bitDynamik(int bits);
+    void bitDynamikGraustufe(int bits);
     void autoKontrast(int kontrastWert);
     void createImageBlackCopy();
     void createImageColor();
     void bitDynamikColor(int bits);
-    void helligkeitColor(int helligkeitswert);
+    void brightnessColor(int helligkeitswert);
     void histogramColor();
     void autoKontrastColor(int kontrastWert);
     void generateFilterTable();
