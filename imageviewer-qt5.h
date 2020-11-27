@@ -63,6 +63,7 @@ class QSlider;
 class QTableWidget;
 class QComboBox;
 
+
 class ImageViewer : public QMainWindow
 {
     Q_OBJECT
@@ -110,11 +111,11 @@ private:
     QSlider* sliderColorBit;
     QSlider* autoKontrastColorSlider;
     QSpinBox* spinbox1;
-
     QLabel* labelMiddleBrightness;
     QLabel* labelVarianz;
     QLabel* labelSliderTick;
     QLabel* meinHistogram;
+    QLabel* meinHistogramLog;
     QLabel* myHistogramColorLabel;
     QLabel* linearFilterxSliderLabel;
     QLabel* linearFilterySliderLabel;
@@ -130,9 +131,6 @@ private:
     QLineEdit* sigmaInputUSM;
     QPushButton*  buttonUSM;
     QLineEdit* aUSM;
-
-
-
     QPushButton * gaussFilterButton;
     QPushButton* sobelButton;
 
@@ -177,6 +175,7 @@ private slots:
     void deleteCross();
     void kantePrewitt();
     void USM();
+    void histogramLog();
 
 
 
@@ -235,6 +234,7 @@ private:
     QImage* imageGray;
 
     QImage* myHistogram;
+    QImage* myHistogramLog;
     QImage* myHistogramColor;
     QImage* mirrorImage;
     QImage* imageGauss;
